@@ -87,7 +87,12 @@ private:
     std::atomic<float> grainsPerSecond_ { 10.0f };
     std::atomic<TemporalDistribution> temporalDistributionModel_ { TemporalDistribution::Uniform };
     std::atomic<double> sampleRate_ { 44100.0 };
-    // ... other atomic parameters for density, duration, etc.
+    std::atomic<float> centralPan { 0.0f };
+    std::atomic<float> panSpread { 0.5f };
+
+
+    std::normal_distribution<float> pitchDistribution;
+    std::normal_distribution<float> panDistribution;
 };
 
 

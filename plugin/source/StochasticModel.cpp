@@ -2,6 +2,7 @@
 #include <random> // For distributions if needed directly in setters, though likely just for storage here
 #include <cmath>  // For std::abs, std::max etc. if needed
 #include <limits> // For std::numeric_limits<double>::epsilon(), INT_MAX
+#include <algorithm> // Will be needed for std::clamp in other methods
 
 // Forward declaration or ensure StochasticModel is fully defined via header
 // class StochasticModel; // Not needed if PointilismInterfaces.h includes full definition
@@ -25,6 +26,18 @@ void StochasticModel::setTemporalDistribution(StochasticModel::TemporalDistribut
 void StochasticModel::setSampleRate(double newSampleRate)
 {
     sampleRate_ = newSampleRate;
+
+
+void StochasticModel::setPitchAndDispersion(float centralPitch, float dispersionAmount)
+{
+    pitch.store(centralPitch);
+    dispersion.store(dispersionAmount);
+}
+
+void StochasticModel::setPanAndSpread(float newCentralPan, float newSpreadAmount)
+{
+    centralPan.store(newCentralPan);
+    panSpread.store(newSpreadAmount);
 }
 
 void StochasticModel::generateNewGrain(Grain& newGrain)
@@ -58,6 +71,25 @@ void StochasticModel::generateNewGrain(Grain& newGrain)
     // Other members of Grain (pitch, pan, amplitude, etc.) are not set here
     // as per the current task. They would be set by other parts of StochasticModel
     // or have default values.
+      // Pitch
+    using PitchDistributionParams = std::normal_distribution<float>::param_type;
+    pitchDistribution.param(PitchDistributionParams(pitch.load(), dispersion.load()));
+    newGrain.pitch = pitchDistribution(randomEngine);
+
+    // Pan
+    using PanDistributionParams = std::normal_distribution<float>::param_type;
+    panDistribution.param(PanDistributionParams(centralPan.load(), panSpread.load()));
+    float generatedPan = panDistribution(randomEngine);
+    newGrain.pan = std::clamp(generatedPan, -1.0f, 1.0f);
+
+    // Other grain properties will be set elsewhere or in future tasks.
+    // For now, ensure isAlive is true and assign a temporary ID or leave as default.
+    newGrain.isAlive = true;
+    // newGrain.id = ...; // Not part of this task's core requirements for pitch/pan
+    // newGrain.amplitude = ...;
+    // newGrain.durationInSamples = ...;
+    // newGrain.ageInSamples = 0;
+    // newGrain.sourceSamplePosition = ...;
 }
 
 int StochasticModel::getSamplesUntilNextEvent()
@@ -107,4 +139,5 @@ int StochasticModel::getSamplesUntilNextEvent()
 
     // Fallback, though ideally all enum values should be handled.
     return INT_MAX;
+
 }
