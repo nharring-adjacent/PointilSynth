@@ -18,11 +18,13 @@
 //     // ... other members
 // };
 
+
 void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
     currentSampleRate = sampleRate;
     oscillator_.setSampleRate(sampleRate);
     stochasticModel.sampleRate_.store(sampleRate); // Update stochastic model's sample rate
+    stochasticModel.setSampleRate(sampleRate); // Inform StochasticModel
     samplesUntilNextGrain_ = stochasticModel.getSamplesUntilNextEvent();
     grains.reserve(1024); // Keep existing functionality
 }
@@ -159,8 +161,9 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
         }),
         grains.end()
     );
+} // End of processBlock
 
-// Implementation of loadAudioSample
+// Implementation of loadAudioSample - MOVED OUTSIDE processBlock
 void AudioEngine::loadAudioSample(const juce::File& audioFile)
 {
     juce::AudioFormatManager formatManager;
