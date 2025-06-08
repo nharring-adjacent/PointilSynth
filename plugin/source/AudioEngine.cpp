@@ -1,6 +1,60 @@
-#include "PointilismInterfaces.h" // For AudioEngine declaration
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_core/juce_core.h> // For DBG, juce::File
+#include "PointilismInterfaces.h"
+#include <vector>
+#include <algorithm> // Required for std::remove_if
+
+// Forward declaration of AudioEngine if not fully defined in PointilismInterfaces.h
+// Or ensure PointilismInterfaces.h has full class definition before this point.
+// Assuming PointilismInterfaces.h contains:
+// class AudioEngine {
+// public:
+//     void prepareToPlay(double sampleRate, int samplesPerBlock);
+//     // ... other members
+// private:
+//     std::vector<Grain> grains;
+//     // ... other members
+// };
+
+void AudioEngine::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/)
+{
+    grains.reserve(1024);
+}
+
+// Add the following method:
+void AudioEngine::triggerNewGrain()
+{
+    Grain newGrain;
+    newGrain.durationInSamples = 44100; // Default test value
+    newGrain.isAlive = true;
+    newGrain.ageInSamples = 0;
+    grains.push_back(newGrain);
+}
+
+// Add the following method:
+void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /*midiMessages*/)
+{
+    const int numSamples = buffer.getNumSamples();
+
+    for (auto& grain : grains)
+    {
+        if (!grain.isAlive)
+            continue;
+
+        grain.ageInSamples += numSamples;
+
+        if (grain.ageInSamples >= grain.durationInSamples)
+        {
+            grain.isAlive = false;
+        }
+    }
+
+    grains.erase(
+        std::remove_if(grains.begin(), grains.end(), [](const Grain& grain) {
+            return !grain.isAlive;
+        }),
+        grains.end()
+    );
 
 // Implementation of loadAudioSample
 void AudioEngine::loadAudioSample(const juce::File& audioFile)
@@ -49,15 +103,4 @@ void AudioEngine::loadAudioSample(const juce::File& audioFile)
     DBG("Loaded audio file: " + audioFile.getFullPathName() +
         ", Channels: " + juce::String(sourceAudio.getNumChannels()) +
         ", Samples: " + juce::String(sourceAudio.getNumSamples()));
-}
-
-// Keep the other placeholder methods as they are for now
-void AudioEngine::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/)
-{
-    // TODO: Implementation if needed for this task or future tasks
-}
-
-void AudioEngine::processBlock(juce::AudioBuffer<float>& /*buffer*/, juce::MidiBuffer& /*midiMessages*/)
-{
-    // TODO: Implementation if needed for this task or future tasks
 }
