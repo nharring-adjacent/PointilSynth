@@ -80,7 +80,12 @@ private:
     // Parameters controlled by the UI (using std::atomic for thread-safety)
     std::atomic<float> pitch { 60.0f };
     std::atomic<float> dispersion { 12.0f };
+    std::atomic<float> centralPan { 0.0f };
+    std::atomic<float> panSpread { 0.5f };
     // ... other atomic parameters for density, duration, etc.
+
+    std::normal_distribution<float> pitchDistribution;
+    std::normal_distribution<float> panDistribution;
 };
 
 
