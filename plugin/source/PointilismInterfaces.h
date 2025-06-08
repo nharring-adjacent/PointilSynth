@@ -58,11 +58,50 @@ public:
     //==============================================================================
     // Parameter Setters (called by the UI thread)
     //==============================================================================
-    void setPitchAndDispersion(float centralPitch, float dispersion) { /* ... */ }  // 
-    void setDurationAndVariation(float averageDurationMs, float variation) { /* ... */ } // 
-    void setPanAndSpread(float centralPan, float spread) { /* ... */ } // 
-    void setDensity(float grainsPerSecond) { /* ... */ } // 
-    void setTemporalDistribution(TemporalDistribution model) { /* ... */ } // 
+    void setPitchAndDispersion(float centralPitchValue, float dispersionValue) {
+        pitch.store(centralPitchValue);
+        dispersion.store(dispersionValue);
+        pitchDistribution = std::normal_distribution<float>(centralPitchValue, dispersionValue);
+    }
+    void setDurationAndVariation(float averageDurationMsValue, float variationValue) {
+        averageDurationMs_.store(averageDurationMsValue);
+        durationVariation_.store(variationValue);
+        // Assuming variationValue is a multiplier for stddev: e.g. 0.1 for 10%
+        // Ensure stddev is not negative if variationValue can be large.
+        float stdDev = averageDurationMsValue * variationValue;
+        durationDistribution = std::normal_distribution<float>(averageDurationMsValue, stdDev > 0 ? stdDev : 0.001f);
+    }
+    void setPanAndSpread(float centralPanValue, float spreadValue) {
+        centralPan.store(centralPanValue);
+        panSpread.store(spreadValue);
+        panDistribution = std::normal_distribution<float>(centralPanValue, spreadValue);
+    }
+    void setDensity(float grainsPerSecondValue) { // Already correctly implemented from previous turn
+        grainsPerSecond_.store(grainsPerSecondValue);
+        // If Poisson distribution rate depends on this, update here.
+        // e.g., if using grainsPerSecond directly for poisson lambda:
+        // poissonDistribution_ = std::poisson_distribution<int>(grainsPerSecondValue);
+        // More likely, it's related to sampleRate: events_per_sample = grainsPerSecond / sampleRate
+        // And then lambda = events_per_sample * block_size for poisson events per block.
+        // This logic is typically in getSamplesUntilNextEvent() or similar.
+    }
+    void setTemporalDistribution(TemporalDistribution modelValue) { // Already correctly implemented
+        temporalDistributionModel_.store(modelValue);
+    }
+
+    //==============================================================================
+    // Parameter Getters (called by UI thread via DebugUIPanel)
+    //==============================================================================
+    float getPitch() const { return pitch.load(); }
+    float getDispersion() const { return dispersion.load(); }
+    float getAverageDurationMs() const { return averageDurationMs_.load(); }
+    float getDurationVariation() const { return durationVariation_.load(); }
+    float getCentralPan() const { return centralPan.load(); }
+    float getPanSpread() const { return panSpread.load(); }
+    float getGrainsPerSecond() const { return grainsPerSecond_.load(); }
+    TemporalDistribution getTemporalDistributionModel() const { return temporalDistributionModel_.load(); }
+    double getSampleRate() const { return sampleRate_.load(); }
+
 
     //==============================================================================
     // Value Generators (called by the AudioEngine thread)
@@ -77,25 +116,42 @@ public:
 private:
     // Private members would include std::mt19937 for random number generation,
     // and various std::distribution objects (e.g., normal_distribution,
-    // uniform_real_distribution, poisson_distribution) to model the parameters. 
-    std::mt19937 randomEngine;
-    std::poisson_distribution<int> poissonDistribution_;
+    // uniform_real_distribution, poisson_distribution) to model the parameters.
+    // Ensure randomEngine is seeded, e.g., in constructor or a dedicated init method.
+    std::mt19937 randomEngine { std::random_device{}() }; // Example seeding
+    std::poisson_distribution<int> poissonDistribution_ {10.0}; // Example initialization
     std::uniform_real_distribution<float> uniformRealDistribution_ { -0.5f, 0.5f };
 
     // Parameters controlled by the UI (using std::atomic for thread-safety)
     std::atomic<float> pitch { 60.0f };
-    std::atomic<float> dispersion { 12.0f };
-    std::atomic<float> averageDurationMs_ { 0.0f };
-    std::atomic<float> durationVariation_ { 0.0f };
+    std::atomic<float> dispersion { 12.0f }; // e.g. in semitones
+    std::atomic<float> averageDurationMs_ { 200.0f }; // e.g. in milliseconds
+    std::atomic<float> durationVariation_ { 0.25f }; // e.g. 25% variation
     std::atomic<float> grainsPerSecond_ { 10.0f };
     std::atomic<TemporalDistribution> temporalDistributionModel_ { TemporalDistribution::Uniform };
-    std::atomic<double> sampleRate_ { 44100.0 };
-    std::atomic<float> centralPan { 0.0f };
-    std::atomic<float> panSpread { 0.5f };
+    std::atomic<double> sampleRate_ { 44100.0 }; // Should be set by prepareToPlay in AudioEngine
+    std::atomic<float> centralPan { 0.0f }; // -1 (L) to 1 (R)
+    std::atomic<float> panSpread { 0.5f }; // 0 (no spread) to 1 (full spread)
 
 
-    std::normal_distribution<float> pitchDistribution;
-    std::normal_distribution<float> panDistribution;
+    // Distributions - these should be updated when parameters change.
+    // For simplicity, the setters currently just store values. A more complete
+    // implementation would update these distributions in the setters.
+    std::normal_distribution<float> pitchDistribution { pitch.load(), dispersion.load() };
+    std::normal_distribution<float> panDistribution { centralPan.load(), panSpread.load() };
+    // Duration distribution might be normal or log-normal depending on desired behavior
+    std::normal_distribution<float> durationDistribution { averageDurationMs_.load(), averageDurationMs_.load() * durationVariation_.load() };
+
+public: // Public setter for sample rate, to be called by AudioEngine
+    void setSampleRate(double sr) {
+        sampleRate_.store(sr);
+        // Update any distributions or parameters that depend on the sample rate.
+        // For example, if poissonDistribution_ is for events per second:
+        // poissonDistribution_ = std::poisson_distribution<double>(grainsPerSecond_.load());
+        // And then getSamplesUntilNextEvent translates this to samples.
+        // Or if it's events per block (more complex here).
+        // For now, just storing it. The getSamplesUntilNextEvent() will need to use sampleRate_ correctly.
+    }
 };
 
 

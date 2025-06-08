@@ -14,6 +14,7 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
 
     // Set the size of the editor window.
     setSize(600, 400); // Example size, can be adjusted
+
 }
 
 PointillisticSynthAudioProcessorEditor::~PointillisticSynthAudioProcessorEditor() {}
@@ -46,6 +47,7 @@ void PointillisticSynthAudioProcessorEditor::resized() {
     densityPod.setBounds(podArea.removeFromLeft(podWidth));
     durationPod.setBounds(podArea.removeFromLeft(podWidth));
     panPod.setBounds(podArea.removeFromLeft(podWidth));
+
 }
 
 } // namespace audio_plugin
