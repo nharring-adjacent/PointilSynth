@@ -1,6 +1,8 @@
 #pragma once
 
-#include "PluginProcessor.h"
+
+#include "Pointilsynth/PluginProcessor.h" // Adjusted path
+#include "UI/PodComponent.h"
 #include "../../source/DebugUIPanel.h"       // Added for DebugUIPanel
 // PointilismInterfaces.h is included by PluginProcessor.h, which is included above.
 // If direct use of StochasticModel type was needed here, an include would be good:
@@ -8,21 +10,27 @@
 
 namespace audio_plugin {
 
-class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor {
+class PointillisticSynthAudioProcessorEditor : public juce::AudioProcessorEditor {
 public:
-  explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor&);
-  ~AudioPluginAudioProcessorEditor() override;
+    explicit PointillisticSynthAudioProcessorEditor(audio_plugin::AudioPluginAudioProcessor&);
+    ~PointillisticSynthAudioProcessorEditor() override;
 
-  void paint(juce::Graphics&) override;
-  void resized() override;
+    void paint(juce::Graphics&) override;
+    void resized() override;
 
 private:
-  // This reference is provided as a quick way for your editor to
-  // access the processor object that created it.
-  AudioPluginAudioProcessor& processorRef;
+    // This reference is provided as a quick way for your editor to
+    // access the processor object that created it.
+    audio_plugin::AudioPluginAudioProcessor& processorRef;
 
-  DebugUIPanel debugUIPanel; // Added DebugUIPanel member
+    PodComponent pitchPod;
+    PodComponent densityPod;
+    PodComponent durationPod;
+    PodComponent panPod;
+    DebugUIPanel debugUIPanel; // Added DebugUIPanel member
+  
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PointillisticSynthAudioProcessorEditor)
 
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessorEditor)
 };
-}  // namespace audio_plugin
+
+} // namespace audio_plugin
