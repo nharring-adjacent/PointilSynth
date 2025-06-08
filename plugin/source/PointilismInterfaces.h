@@ -76,13 +76,20 @@ private:
     // and various std::distribution objects (e.g., normal_distribution,
     // uniform_real_distribution, poisson_distribution) to model the parameters. 
     std::mt19937 randomEngine;
+    std::poisson_distribution<int> poissonDistribution_;
+    std::uniform_real_distribution<float> uniformRealDistribution_ { -0.5f, 0.5f };
 
     // Parameters controlled by the UI (using std::atomic for thread-safety)
     std::atomic<float> pitch { 60.0f };
     std::atomic<float> dispersion { 12.0f };
+    std::atomic<float> averageDurationMs_ { 0.0f };
+    std::atomic<float> durationVariation_ { 0.0f };
+    std::atomic<float> grainsPerSecond_ { 10.0f };
+    std::atomic<TemporalDistribution> temporalDistributionModel_ { TemporalDistribution::Uniform };
+    std::atomic<double> sampleRate_ { 44100.0 };
     std::atomic<float> centralPan { 0.0f };
     std::atomic<float> panSpread { 0.5f };
-    // ... other atomic parameters for density, duration, etc.
+
 
     std::normal_distribution<float> pitchDistribution;
     std::normal_distribution<float> panDistribution;
