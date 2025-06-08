@@ -3,6 +3,8 @@
 #include "PointilismInterfaces.h"
 #include <vector>
 #include <algorithm> // Required for std::remove_if
+#include <cmath>     // For std::pow, std::cos, std::sin
+#include "Resampler.h" // For Resampler::getSample
 
 // Forward declaration of AudioEngine if not fully defined in PointilismInterfaces.h
 // Or ensure PointilismInterfaces.h has full class definition before this point.
@@ -16,18 +18,32 @@
 //     // ... other members
 // };
 
-void AudioEngine::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/)
+void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
-    grains.reserve(1024);
+    currentSampleRate = sampleRate;
+    oscillator_.setSampleRate(sampleRate);
+    stochasticModel.sampleRate_.store(sampleRate); // Update stochastic model's sample rate
+    samplesUntilNextGrain_ = stochasticModel.getSamplesUntilNextEvent();
+    grains.reserve(1024); // Keep existing functionality
 }
 
 // Add the following method:
 void AudioEngine::triggerNewGrain()
 {
     Grain newGrain;
-    newGrain.durationInSamples = 44100; // Default test value
-    newGrain.isAlive = true;
-    newGrain.ageInSamples = 0;
+    stochasticModel.generateNewGrain(newGrain); // Populate grain properties
+
+    newGrain.id = grainIdCounter++; // Assign unique ID and increment counter
+    newGrain.isAlive = true;        // New grains are always initially alive
+    newGrain.ageInSamples = 0;      // New grains start with zero age
+
+    // It's assumed that stochasticModel.generateNewGrain(newGrain) handles:
+    // - newGrain.pitch
+    // - newGrain.pan
+    // - newGrain.amplitude
+    // - newGrain.durationInSamples
+    // - newGrain.sourceSamplePosition (if applicable for the current source type)
+
     grains.push_back(newGrain);
 }
 
@@ -36,19 +52,107 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
 {
     const int numSamples = buffer.getNumSamples();
 
-    for (auto& grain : grains)
+    // Update the countdown for the next grain event
+    samplesUntilNextGrain_ -= numSamples;
+
+    // Trigger new grains if the countdown has elapsed
+    while (samplesUntilNextGrain_ <= 0)
     {
-        if (!grain.isAlive)
-            continue;
-
-        grain.ageInSamples += numSamples;
-
-        if (grain.ageInSamples >= grain.durationInSamples)
-        {
-            grain.isAlive = false;
-        }
+        triggerNewGrain();
+        // Add the full duration for the next event, plus any "overshoot" from the current block.
+        // This maintains more accurate timing for grain generation.
+        samplesUntilNextGrain_ += stochasticModel.getSamplesUntilNextEvent();
+        // Note: StochasticModel::getSamplesUntilNextEvent() must return a positive value
+        // to prevent potential infinite loops if it could return 0 or negative.
     }
 
+    // Clear the buffer at the start of the block, after triggering new grains
+    buffer.clear();
+
+    // const int numSamples = buffer.getNumSamples(); // This line is already above the triggering logic
+
+    for (int s = 0; s < numSamples; ++s) // Outer loop: iterate through each sample in the block
+    {
+        float outputLeft = 0.0f;
+        float outputRight = 0.0f;
+
+        for (auto& grain : grains) // Inner loop: iterate through each grain
+        {
+            if (!grain.isAlive)
+                continue;
+
+            // Check if grain's lifetime has just ended in this sample
+            if (grain.ageInSamples >= grain.durationInSamples)
+            {
+                grain.isAlive = false; // Mark for cleanup after the main sample loop
+                continue;
+            }
+
+            float sourceSample = 0.0f;
+
+            // A. Fetch source sample based on grain's source type
+            if (currentSourceType_.load() == GrainSourceType::Oscillator)
+            {
+                float frequency = static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(grain.pitch));
+                oscillator_.setFrequency(frequency); // Tune the shared oscillator
+                sourceSample = oscillator_.getNextSample(); // Process and advance oscillator
+            }
+            else if (currentSourceType_.load() == GrainSourceType::AudioSample)
+            {
+                // Ensure sourceAudio is valid and has channels/samples
+                if (sourceAudio.getNumSamples() > 0 && sourceAudio.getNumChannels() > 0)
+                {
+                    int sourceChannelToRead = 0; // Default to reading from channel 0
+                                                 // (Resampler expects a specific channel from source)
+                    sourceSample = Resampler::getSample(sourceAudio, sourceChannelToRead, grain.sourceSamplePosition);
+
+                    // Advance grain's internal playback position for the audio sample, adjusted by pitch
+                    float baseMidiNote = 60.0f; // MIDI note 60 is normal speed
+                    float pitchRatio = std::pow(2.0f, (grain.pitch - baseMidiNote) / 12.0f);
+                    grain.sourceSamplePosition += pitchRatio;
+
+                    // Note: Resampler::getSample should handle grain.sourceSamplePosition going out of bounds.
+                }
+            }
+
+            // B. Calculate envelope value using GrainEnvelope
+            // grainEnvelope_ is a member of AudioEngine.
+            float envelopeValue = grainEnvelope_.getAmplitude(grain.ageInSamples, grain.durationInSamples);
+
+            // C. Multiply source sample by envelope value and grain's overall amplitude
+            float processedSample = sourceSample * envelopeValue * grain.amplitude;
+
+            // D. Apply panning (Constant Power Panning)
+            float panPosition = grain.pan; // Expected range: -1.0 (L) to 1.0 (R)
+            // Map pan position to an angle: -1.0 (L) -> 0, 0.0 (C) -> PI/4, 1.0 (R) -> PI/2
+            float panAngle = (panPosition * 0.5f + 0.5f) * (juce::MathConstants<float>::pi * 0.5f);
+            float panGainLeft = std::cos(panAngle);
+            float panGainRight = std::sin(panAngle);
+
+            outputLeft += processedSample * panGainLeft;
+            outputRight += processedSample * panGainRight;
+
+            // E. Increment grain's ageInSamples (as it has been processed for one sample)
+            grain.ageInSamples++;
+        } // End of inner grain loop
+
+        // Write accumulated stereo signal to the output buffer for the current sample 's'
+        if (buffer.getNumChannels() > 0) { // Check if buffer has at least one channel
+            buffer.setSample(0, s, outputLeft);  // Left channel (or mono if numChannels == 1)
+        }
+        if (buffer.getNumChannels() > 1) { // Check if buffer has at least two channels
+            buffer.setSample(1, s, outputRight); // Right channel
+        }
+
+        // Optional: Fill any additional channels (e.g., for surround sound setups)
+        for (int channel = 2; channel < buffer.getNumChannels(); ++channel)
+        {
+            // Example: Mix down stereo to additional channels or set to zero
+            buffer.setSample(channel, s, (outputLeft + outputRight) * 0.5f);
+        }
+    } // End of outer sample loop
+
+    // Cleanup dead grains (this part remains from existing code)
     grains.erase(
         std::remove_if(grains.begin(), grains.end(), [](const Grain& grain) {
             return !grain.isAlive;
@@ -103,4 +207,33 @@ void AudioEngine::loadAudioSample(const juce::File& audioFile)
     DBG("Loaded audio file: " + audioFile.getFullPathName() +
         ", Channels: " + juce::String(sourceAudio.getNumChannels()) +
         ", Samples: " + juce::String(sourceAudio.getNumSamples()));
+}
+
+void AudioEngine::setGrainSource(int internalWaveformId)
+{
+    currentSourceType_.store(AudioEngine::GrainSourceType::Oscillator); // Set source type to Oscillator
+
+    Pointilsynth::Oscillator::Waveform selectedWaveform;
+
+    switch (internalWaveformId)
+    {
+        case 0:
+            selectedWaveform = Pointilsynth::Oscillator::Waveform::Sine;
+            break;
+        case 1:
+            selectedWaveform = Pointilsynth::Oscillator::Waveform::Saw;
+            break;
+        case 2:
+            selectedWaveform = Pointilsynth::Oscillator::Waveform::Square;
+            break;
+        case 3:
+            selectedWaveform = Pointilsynth::Oscillator::Waveform::Noise;
+            break;
+        default:
+            // Default to Sine for unrecognized IDs
+            selectedWaveform = Pointilsynth::Oscillator::Waveform::Sine;
+            // Consider adding DBG("Unknown internalWaveformId..."); for debugging
+            break;
+    }
+    oscillator_.setWaveform(selectedWaveform);
 }

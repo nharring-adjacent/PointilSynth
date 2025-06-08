@@ -4,6 +4,9 @@
 #include <juce_core/juce_core.h>
 #include <juce_audio_basics/juce_audio_basics.h>
 
+#include "Pointilsynth/Oscillator.h"
+#include "GrainEnvelope.h"
+
 #include <vector>
 #include <random>
 #include <atomic>
@@ -107,6 +110,12 @@ private:
 class AudioEngine
 {
 public:
+    enum class GrainSourceType
+    {
+        Oscillator,
+        AudioSample
+    };
+
     AudioEngine() = default;
 
     /** Called by the host to prepare the engine for playback. */
@@ -143,4 +152,10 @@ private:
 
     // Placeholder for the loaded audio file data. 
     juce::AudioBuffer<float> sourceAudio;
+
+    Pointilsynth::Oscillator oscillator_;
+    GrainEnvelope grainEnvelope_;
+    std::atomic<GrainSourceType> currentSourceType_ {GrainSourceType::Oscillator};
+
+    void triggerNewGrain();
 };
