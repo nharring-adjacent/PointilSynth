@@ -16,9 +16,11 @@
 //     // ... other members
 // };
 
-void AudioEngine::prepareToPlay(double /*sampleRate*/, int /*samplesPerBlock*/)
+void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) // Uncommented sampleRate
 {
-    grains.reserve(1024);
+    currentSampleRate = sampleRate; // Store sampleRate
+    stochasticModel.setSampleRate(sampleRate); // Inform StochasticModel
+    grains.reserve(1024); // Existing logic
 }
 
 // Add the following method:
@@ -55,8 +57,9 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
         }),
         grains.end()
     );
+} // End of processBlock
 
-// Implementation of loadAudioSample
+// Implementation of loadAudioSample - MOVED OUTSIDE processBlock
 void AudioEngine::loadAudioSample(const juce::File& audioFile)
 {
     juce::AudioFormatManager formatManager;
