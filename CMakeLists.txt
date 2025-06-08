@@ -48,6 +48,18 @@ cpmaddpackage(
   "gtest_force_shared_crt ON"
 )
 
+cpmaddpackage(
+  NAME
+  nlohmann_json
+  VERSION
+  3.11.3
+  GITHUB_REPOSITORY
+  nlohmann/json
+  OPTIONS
+  "JSON_BuildTests OFF"
+  "JSON_Install OFF"
+)
+
 # Add compiler warning utilities
 include(cmake/CompilerWarnings.cmake)
 include(cmake/Util.cmake)

@@ -44,6 +44,7 @@ target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils)
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
                          juce::juce_recommended_warning_flags
+                         nlohmann_json::nlohmann_json
 )
 
 # These definitions are recommended by JUCE.

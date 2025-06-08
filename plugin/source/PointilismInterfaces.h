@@ -76,17 +76,25 @@ public:
         panSpread.store(spreadValue);
         panDistribution = std::normal_distribution<float>(centralPanValue, spreadValue);
     }
-    void setDensity(float grainsPerSecondValue) { // Already correctly implemented from previous turn
-        grainsPerSecond_.store(grainsPerSecondValue);
+    void setGlobalDensity(float densityValue) { // Renamed from setDensity
+        globalDensity_.store(densityValue); // Updated from grainsPerSecond_ to globalDensity_ and parameter name
         // If Poisson distribution rate depends on this, update here.
-        // e.g., if using grainsPerSecond directly for poisson lambda:
-        // poissonDistribution_ = std::poisson_distribution<int>(grainsPerSecondValue);
-        // More likely, it's related to sampleRate: events_per_sample = grainsPerSecond / sampleRate
+        // e.g., if using globalDensity_ directly for poisson lambda:
+        // poissonDistribution_ = std::poisson_distribution<int>(densityValue);
+        // More likely, it's related to sampleRate: events_per_sample = densityValue / sampleRate
         // And then lambda = events_per_sample * block_size for poisson events per block.
         // This logic is typically in getSamplesUntilNextEvent() or similar.
     }
-    void setTemporalDistribution(TemporalDistribution modelValue) { // Already correctly implemented
-        temporalDistributionModel_.store(modelValue);
+    void setGlobalMinDistance(float minDistValue) { globalMinDistance_.store(minDistValue); }
+    void setGlobalPitchOffset(int pitchOffsetValue) { globalPitchOffset_.store(pitchOffsetValue); }
+    void setGlobalPanOffset(float panOffsetValue) { globalPanOffset_.store(panOffsetValue); }
+    void setGlobalVelocityOffset(float velocityOffsetValue) { globalVelocityOffset_.store(velocityOffsetValue); }
+    void setGlobalDurationOffset(float durationOffsetValue) { globalDurationOffset_.store(durationOffsetValue); }
+    void setGlobalTempoSyncEnabled(bool tempoSyncEnabledValue) { globalTempoSyncEnabled_.store(tempoSyncEnabledValue); }
+    void setGlobalNumVoices(int numVoicesValue) { globalNumVoices_.store(numVoicesValue); }
+    void setGlobalNumGrains(int numGrainsValue) { globalNumGrains_.store(numGrainsValue); }
+    void setGlobalTemporalDistribution(TemporalDistribution modelValue) { // Renamed from setTemporalDistribution
+        globalTemporalDistribution_.store(modelValue); // Updated from temporalDistributionModel_
     }
 
     //==============================================================================
@@ -98,8 +106,16 @@ public:
     float getDurationVariation() const { return durationVariation_.load(); }
     float getCentralPan() const { return centralPan.load(); }
     float getPanSpread() const { return panSpread.load(); }
-    float getGrainsPerSecond() const { return grainsPerSecond_.load(); }
-    TemporalDistribution getTemporalDistributionModel() const { return temporalDistributionModel_.load(); }
+    float getGlobalDensity() const { return globalDensity_.load(); } // Renamed from getGrainsPerSecond
+    float getGlobalMinDistance() const { return globalMinDistance_.load(); }
+    int getGlobalPitchOffset() const { return globalPitchOffset_.load(); }
+    float getGlobalPanOffset() const { return globalPanOffset_.load(); }
+    float getGlobalVelocityOffset() const { return globalVelocityOffset_.load(); }
+    float getGlobalDurationOffset() const { return globalDurationOffset_.load(); }
+    bool isGlobalTempoSyncEnabled() const { return globalTempoSyncEnabled_.load(); } // Note: 'is' prefix for bool
+    int getGlobalNumVoices() const { return globalNumVoices_.load(); }
+    int getGlobalNumGrains() const { return globalNumGrains_.load(); }
+    TemporalDistribution getGlobalTemporalDistribution() const { return globalTemporalDistribution_.load(); } // Renamed from getTemporalDistributionModel
     double getSampleRate() const { return sampleRate_.load(); }
 
 
@@ -127,8 +143,16 @@ private:
     std::atomic<float> dispersion { 12.0f }; // e.g. in semitones
     std::atomic<float> averageDurationMs_ { 200.0f }; // e.g. in milliseconds
     std::atomic<float> durationVariation_ { 0.25f }; // e.g. 25% variation
-    std::atomic<float> grainsPerSecond_ { 10.0f };
-    std::atomic<TemporalDistribution> temporalDistributionModel_ { TemporalDistribution::Uniform };
+    std::atomic<float> globalDensity_ { 10.0f }; // Formerly grainsPerSecond_
+    std::atomic<float> globalMinDistance_ { 0.0f }; // New parameter
+    std::atomic<int> globalPitchOffset_ { 0 }; // New parameter
+    std::atomic<float> globalPanOffset_ { 0.0f }; // New parameter
+    std::atomic<float> globalVelocityOffset_{0.0f};
+    std::atomic<float> globalDurationOffset_{0.0f};
+    std::atomic<bool> globalTempoSyncEnabled_{false};
+    std::atomic<int> globalNumVoices_{1};
+    std::atomic<int> globalNumGrains_{100};
+    std::atomic<TemporalDistribution> globalTemporalDistribution_ { TemporalDistribution::Uniform }; // Formerly temporalDistributionModel_
     std::atomic<double> sampleRate_ { 44100.0 }; // Should be set by prepareToPlay in AudioEngine
     std::atomic<float> centralPan { 0.0f }; // -1 (L) to 1 (R)
     std::atomic<float> panSpread { 0.5f }; // 0 (no spread) to 1 (full spread)
@@ -147,7 +171,7 @@ public: // Public setter for sample rate, to be called by AudioEngine
         sampleRate_.store(sr);
         // Update any distributions or parameters that depend on the sample rate.
         // For example, if poissonDistribution_ is for events per second:
-        // poissonDistribution_ = std::poisson_distribution<double>(grainsPerSecond_.load());
+        // poissonDistribution_ = std::poisson_distribution<double>(globalDensity_.load()); // Updated from grainsPerSecond_
         // And then getSamplesUntilNextEvent translates this to samples.
         // Or if it's events per block (more complex here).
         // For now, just storing it. The getSamplesUntilNextEvent() will need to use sampleRate_ correctly.
