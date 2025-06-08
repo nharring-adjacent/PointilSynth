@@ -6,6 +6,7 @@ xcode-build/
 release-build/
 out/
 vs-build/
+_deps/
 
 # Prerequisites
 *.d
@@ -451,3 +452,20 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# CMake
+CMakeCache.txt
+*.cmake
+*.cmake.in
+cmake_install.cmake
+build/
+cmake-build-debug/
+cmake-build-release/
+out/
+CMakeFiles/
+_build/
+*Makefile
+plugin/PointillisticSynth_artefacts/
+
+# MacStuff
+.DS_Store*
