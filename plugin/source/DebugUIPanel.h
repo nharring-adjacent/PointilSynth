@@ -14,7 +14,8 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
 
-private:
+// Made public for testing purposes
+public:
     // Pointer to the audio engine's stochastic model
     StochasticModel* stochasticModel;
 
@@ -40,6 +41,8 @@ private:
     juce::ComboBox temporalDistributionComboBox;
     juce::Label temporalDistributionLabel;
 
+// Revert to private for callback methods if they don't need to be called directly by tests
+private:
     // Callback methods for UI components
     void pitchSliderChanged();
     void dispersionSliderChanged();
