@@ -6,11 +6,18 @@ project(AudioPluginTest)
 enable_testing()
 
 # Creates the test console application.
-set(SOURCE_FILES source/AudioProcessorTest.cpp)
+set(SOURCE_FILES
+    source/AudioProcessorTest.cpp
+    source/PresetManagerTest.cpp
+)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 # Sets the necessary include directories of googletest.
-target_include_directories(${PROJECT_NAME} PRIVATE ${GOOGLETEST_SOURCE_DIR}/googletest/include)
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${GOOGLETEST_SOURCE_DIR}/googletest/include
+    ${PROJECT_SOURCE_DIR}/Source # For PresetManager.h
+    ${PROJECT_SOURCE_DIR}/plugin/source # For PointilismInterfaces.h
+)
 
 # Thanks to the fact that we link against the gtest_main library, we don't have to write the main function ourselves.
 target_link_libraries(${PROJECT_NAME} PRIVATE AudioPlugin GTest::gtest_main)
