@@ -7,6 +7,11 @@
 // Forward declaration or ensure StochasticModel is fully defined via header
 // class StochasticModel; // Not needed if PointilismInterfaces.h includes full definition
 
+void StochasticModel::seedRandomEngine(unsigned int seed)
+{
+    randomEngine.seed(seed);
+}
+
 void StochasticModel::setDurationAndVariation(float averageDurationMs, float variation)
 {
     averageDurationMs_ = averageDurationMs;

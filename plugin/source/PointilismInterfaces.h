@@ -176,6 +176,7 @@ public: // Public setter for sample rate, to be called by AudioEngine
         // Or if it's events per block (more complex here).
         // For now, just storing it. The getSamplesUntilNextEvent() will need to use sampleRate_ correctly.
     }
+    void seedRandomEngine(unsigned int seed);
 };
 
 
