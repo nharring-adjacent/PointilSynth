@@ -5,7 +5,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 
 #include "Pointilsynth/Oscillator.h"
-#include "GrainEnvelope.h"
+#include "Pointilsynth/GrainEnvelope.h"
 
 #include <vector>
 #include <random>
