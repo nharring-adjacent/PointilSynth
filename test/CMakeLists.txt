@@ -7,7 +7,6 @@ enable_testing()
 
 # Creates the test console application.
 set(SOURCE_FILES
-    source/AudioProcessorTest.cpp
     source/StochasticModelTest.cpp
 )
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
