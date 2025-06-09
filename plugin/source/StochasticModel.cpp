@@ -69,7 +69,7 @@ void StochasticModel::generateNewGrain(Grain& newGrain)
         // For now, using a common default.
         currentSampleRate = 44100.0;
     }
-    newGrain.durationInSamples = static_cast<int>((randomizedDurationMs / 1000.0) * currentSampleRate);
+    newGrain.durationInSamples = static_cast<int>((static_cast<double>(randomizedDurationMs) / 1000.0) * currentSampleRate);
 
     // Other members of Grain (pitch, pan, amplitude, etc.) are not set here
     // as per the current task. They would be set by other parts of StochasticModel
@@ -110,7 +110,7 @@ int StochasticModel::getSamplesUntilNextEvent()
         return INT_MAX;
     }
 
-    double averageSamplesPerGrain = currentSampleRate / currentGrainsPerSecond;
+    double averageSamplesPerGrain = currentSampleRate / static_cast<double>(currentGrainsPerSecond);
 
     // Check for potential issues with averageSamplesPerGrain before using it,
     // especially with the Poisson distribution.

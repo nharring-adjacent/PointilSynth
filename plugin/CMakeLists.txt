@@ -51,6 +51,10 @@ target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce:
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
                          juce::juce_recommended_warning_flags
+                         juce::juce_core # Already included by others, but explicit for clarity
+                         juce::juce_events # Already included by others, but explicit for clarity
+                         juce::juce_gui_basics # Already included by others, but explicit for clarity
+                         juce::juce_unittest # Make unittest module available
                          nlohmann_json::nlohmann_json
 )
 

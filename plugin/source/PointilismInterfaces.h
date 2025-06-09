@@ -58,46 +58,24 @@ public:
     //==============================================================================
     // Parameter Setters (called by the UI thread)
     //==============================================================================
-    void setPitchAndDispersion(float centralPitchValue, float dispersionValue) {
-        pitch.store(centralPitchValue);
-        dispersion.store(dispersionValue);
-        pitchDistribution = std::normal_distribution<float>(centralPitchValue, dispersionValue);
-    }
-    void setDurationAndVariation(float averageDurationMsValue, float variationValue); // Remove inline definition
-    // {
-    //     averageDurationMs_.store(averageDurationMsValue);
-    //     durationVariation_.store(variationValue);
-    //     // Assuming variationValue is a multiplier for stddev: e.g. 0.1 for 10%
-    //     // Ensure stddev is not negative if variationValue can be large.
-    //     float stdDev = averageDurationMsValue * variationValue;
-    //     durationDistribution = std::normal_distribution<float>(averageDurationMsValue, stdDev > 0 ? stdDev : 0.001f);
-    // }
-    void setPanAndSpread(float centralPanValue, float spreadValue) { // Keep this inline if no redefinition error for it
-        centralPan.store(centralPanValue);
-        panSpread.store(spreadValue);
-        panDistribution = std::normal_distribution<float>(centralPanValue, spreadValue);
-    }
-    void setGlobalDensity(float densityValue); // Changed to declaration
-    // {
-    //     globalDensity_.store(densityValue);
-    //     // ... comments ...
-    // }
-    void setGlobalMinDistance(float minDistValue) { globalMinDistance_.store(minDistValue); } // Keep inline if no issue
-    void setGlobalPitchOffset(int pitchOffsetValue) { globalPitchOffset_.store(pitchOffsetValue); } // Keep inline
-    void setGlobalPanOffset(float panOffsetValue) { globalPanOffset_.store(panOffsetValue); }
-    void setGlobalVelocityOffset(float velocityOffsetValue) { globalVelocityOffset_.store(velocityOffsetValue); }
-    void setGlobalDurationOffset(float durationOffsetValue) { globalDurationOffset_.store(durationOffsetValue); }
-    void setGlobalTempoSyncEnabled(bool tempoSyncEnabledValue) { globalTempoSyncEnabled_.store(tempoSyncEnabledValue); }
-    void setGlobalNumVoices(int numVoicesValue) { globalNumVoices_.store(numVoicesValue); } // Keep inline
-    void setGlobalNumGrains(int numGrainsValue) { globalNumGrains_.store(numGrainsValue); } // Keep inline
-    void setGlobalTemporalDistribution(TemporalDistribution modelValue); // Changed to declaration
-    // {
-    //     globalTemporalDistribution_.store(modelValue);
-    // }
+    void setPitchAndDispersion(float centralPitchValue, float dispersionValue); // Changed to declaration
+    void setDurationAndVariation(float averageDurationMsValue, float variationValue);
+    void setPanAndSpread(float centralPanValue, float spreadValue); // Changed to declaration
+    void setGlobalDensity(float densityValue);
+    void setGlobalMinDistance(float minDistValue) { globalMinDistance_.store(minDistValue); } // Reverted to inline
+    void setGlobalPitchOffset(int pitchOffsetValue) { globalPitchOffset_.store(pitchOffsetValue); } // Reverted to inline
+    void setGlobalPanOffset(float panOffsetValue) { globalPanOffset_.store(panOffsetValue); } // Reverted to inline
+    void setGlobalVelocityOffset(float velocityOffsetValue) { globalVelocityOffset_.store(velocityOffsetValue); } // Reverted to inline
+    void setGlobalDurationOffset(float durationOffsetValue) { globalDurationOffset_.store(durationOffsetValue); } // Reverted to inline
+    void setGlobalTempoSyncEnabled(bool tempoSyncEnabledValue) { globalTempoSyncEnabled_.store(tempoSyncEnabledValue); } // Reverted to inline
+    void setGlobalNumVoices(int numVoicesValue) { globalNumVoices_.store(numVoicesValue); } // Reverted to inline
+    void setGlobalNumGrains(int numGrainsValue) { globalNumGrains_.store(numGrainsValue); } // Reverted to inline
+    void setGlobalTemporalDistribution(TemporalDistribution modelValue);
 
     //==============================================================================
     // Parameter Getters (called by UI thread via DebugUIPanel)
     //==============================================================================
+    // Removed duplicate setPitchAndDispersion declaration from here
     float getPitch() const { return pitch.load(); }
     float getDispersion() const { return dispersion.load(); }
     float getAverageDurationMs() const { return averageDurationMs_.load(); }
