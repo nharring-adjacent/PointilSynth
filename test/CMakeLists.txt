@@ -17,6 +17,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
     ${PROJECT_SOURCE_DIR}/Source # For PresetManager.h
     ${PROJECT_SOURCE_DIR}/plugin/source # For PointilismInterfaces.h
+    ${PROJECT_SOURCE_DIR}/plugin/include # For PluginProcessor.h and other plugin headers
 )
 
 # Thanks to the fact that we link against the gtest_main library, we don't have to write the main function ourselves.
