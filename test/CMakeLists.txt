@@ -1,38 +1,57 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(AudioPluginTest)
+project(PointilSynthTests)
 
-# Signals to CMake that we want to run tests from this directory.
-enable_testing()
+# Add the main JUCE module. This will transitively include other modules.
+# However, it's good practice to explicitly list the ones you use.
+# find_package(JUCE REQUIRED) # This might be needed depending on JUCE installation
 
-# Creates the test console application.
-set(SOURCE_FILES source/AudioProcessorTest.cpp)
+# Define the source files for the test executable
+set(SOURCE_FILES
+    source/DebugUIPanelTest.cpp
+    # Add other test files here if needed in the future
+)
+
+# Create the test executable
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-# Sets the necessary include directories of googletest.
-target_include_directories(${PROJECT_NAME} PRIVATE ${GOOGLETEST_SOURCE_DIR}/googletest/include)
+# Link against the plugin library (PointillisticSynth)
+# This assumes PointillisticSynth is a target defined in the parent CMakeLists.txt
+# or has been built and can be found by CMake.
+# We also need to link against the JUCE modules required for the tests.
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    PointillisticSynth # Link against the actual plugin
+    juce::juce_core
+    juce::juce_events # For the test runner
+    juce::juce_gui_basics # For DebugUIPanel
+    # Add other JUCE modules if test code requires them, e.g.:
+    # juce::juce_audio_basics
+    # juce::juce_audio_processors
+)
 
-# Thanks to the fact that we link against the gtest_main library, we don't have to write the main function ourselves.
-target_link_libraries(${PROJECT_NAME} PRIVATE AudioPlugin GTest::gtest_main)
+# Add include directories
+# Directory containing DebugUIPanel.h and PointilismInterfaces.h
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+    ../plugin/source/ # For DebugUIPanel.h, PointilismInterfaces.h
+    ../plugin/include/ # For other plugin headers if needed
+    # JUCE modules are typically handled by JUCE's CMake support,
+    # but if not, you might need:
+    # ${JUCE_INCLUDE_DIRS}
+)
 
-# Enables strict C++ warnings and treats warnings as errors.
-# This needs to be set up only for your projects, not 3rd party
-set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
+# JUCE specific: Define a console app entry point
+target_compile_definitions(${PROJECT_NAME} PRIVATE JUCE_CONSOLE_APPLICATION=1)
 
-# Adds googletest-specific CMake commands at our disposal.
-include(GoogleTest)
+# Enables strict C++ warnings and treats warnings as errors if desired
+# set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
-# Add all tests defined with googletest to the CMake metadata
-# so that these tests are run upon a call to ctest in the test
-# projects' binary directory.
-if(CMAKE_GENERATOR STREQUAL Xcode)
-  # On macOS arm64, all binaries have to be signed before running.
-  # In local development, the linker adds an ad-hoc placeholder signature.
-  # In Xcode however, the ad-hoc signature is delayed until after the “Run Script” build phase,
-  # so the POST_BUILD command added by gtest_discover_tests cannot run.
-  # Thus, we need to delay test discovery until run time.
-  # Source: https://discourse.cmake.org/t/googletest-crash-when-using-cmake-xcode-arm64/5766/8
-  gtest_discover_tests(${PROJECT_NAME} DISCOVERY_MODE PRE_TEST)
-else()
-  gtest_discover_tests(${PROJECT_NAME})
-endif()
+# To run JUCE unit tests, the executable itself will run them.
+# We don't need gtest_discover_tests here.
+# We can add a custom test command using add_test if we want CTest integration.
+enable_testing()
+add_test(
+    NAME ${PROJECT_NAME}_RunTests
+    COMMAND ${PROJECT_NAME}
+)
