@@ -5,12 +5,13 @@ namespace audio_plugin {
 
 PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
     audio_plugin::AudioPluginAudioProcessor& p)
-    : juce::AudioProcessorEditor(&p), processorRef(p) {
+    : juce::AudioProcessorEditor(&p), processorRef(p), debugUIPanel(p.getStochasticModel()) {
     // Add and make visible the PodComponents
     addAndMakeVisible(pitchPod);
     addAndMakeVisible(densityPod);
     addAndMakeVisible(durationPod);
     addAndMakeVisible(panPod);
+    addAndMakeVisible(debugUIPanel); // Make the debug panel visible
 
     // Set the size of the editor window.
     setSize(600, 400); // Example size, can be adjusted

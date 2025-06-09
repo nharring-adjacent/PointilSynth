@@ -76,7 +76,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     densitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
     densitySlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     densitySlider.setRange(0.1, 50.0, 0.1); // Grains per second
-    if (stochasticModel) densitySlider.setValue(stochasticModel->getGrainsPerSecond(), juce::dontSendNotification);
+    if (stochasticModel) densitySlider.setValue(stochasticModel->getGlobalDensity(), juce::dontSendNotification); // Renamed
     densitySlider.onValueChange = [this] { densitySliderChanged(); };
     addAndMakeVisible(densityLabel);
     densityLabel.setText("Density (gr/s)", juce::dontSendNotification);
@@ -86,7 +86,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     addAndMakeVisible(temporalDistributionComboBox);
     temporalDistributionComboBox.addItem("Uniform", static_cast<int>(StochasticModel::TemporalDistribution::Uniform) + 1);
     temporalDistributionComboBox.addItem("Poisson", static_cast<int>(StochasticModel::TemporalDistribution::Poisson) + 1);
-    if (stochasticModel) temporalDistributionComboBox.setSelectedId(static_cast<int>(stochasticModel->getTemporalDistributionModel()) + 1, juce::dontSendNotification);
+    if (stochasticModel) temporalDistributionComboBox.setSelectedId(static_cast<int>(stochasticModel->getGlobalTemporalDistribution()) + 1, juce::dontSendNotification); // Renamed
     temporalDistributionComboBox.onChange = [this] { temporalDistributionChanged(); };
     addAndMakeVisible(temporalDistributionLabel);
     temporalDistributionLabel.setText("Distribution", juce::dontSendNotification);
@@ -150,43 +150,43 @@ void DebugUIPanel::resized()
 void DebugUIPanel::pitchSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPitchAndDispersion(pitchSlider.getValue(), dispersionSlider.getValue());
+        stochasticModel->setPitchAndDispersion(static_cast<float>(pitchSlider.getValue()), static_cast<float>(dispersionSlider.getValue()));
 }
 
 void DebugUIPanel::dispersionSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPitchAndDispersion(pitchSlider.getValue(), dispersionSlider.getValue());
+        stochasticModel->setPitchAndDispersion(static_cast<float>(pitchSlider.getValue()), static_cast<float>(dispersionSlider.getValue()));
 }
 
 void DebugUIPanel::durationSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setDurationAndVariation(durationSlider.getValue(), durationVariationSlider.getValue());
+        stochasticModel->setDurationAndVariation(static_cast<float>(durationSlider.getValue()), static_cast<float>(durationVariationSlider.getValue()));
 }
 
 void DebugUIPanel::durationVariationSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setDurationAndVariation(durationSlider.getValue(), durationVariationSlider.getValue());
+        stochasticModel->setDurationAndVariation(static_cast<float>(durationSlider.getValue()), static_cast<float>(durationVariationSlider.getValue()));
 }
 
 void DebugUIPanel::panSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPanAndSpread(panSlider.getValue(), panSpreadSlider.getValue());
+        stochasticModel->setPanAndSpread(static_cast<float>(panSlider.getValue()), static_cast<float>(panSpreadSlider.getValue()));
 }
 
 void DebugUIPanel::panSpreadSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPanAndSpread(panSlider.getValue(), panSpreadSlider.getValue());
+        stochasticModel->setPanAndSpread(static_cast<float>(panSlider.getValue()), static_cast<float>(panSpreadSlider.getValue()));
 }
 
 void DebugUIPanel::densitySliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setDensity(densitySlider.getValue());
+        stochasticModel->setGlobalDensity(static_cast<float>(densitySlider.getValue())); // Renamed and cast
 }
 
 void DebugUIPanel::temporalDistributionChanged()
@@ -196,7 +196,7 @@ void DebugUIPanel::temporalDistributionChanged()
         int selectedId = temporalDistributionComboBox.getSelectedId();
         // Enum values are 0-indexed, ComboBox IDs are 1-indexed
         if (selectedId > 0) {
-             stochasticModel->setTemporalDistribution(static_cast<StochasticModel::TemporalDistribution>(selectedId - 1));
+             stochasticModel->setGlobalTemporalDistribution(static_cast<StochasticModel::TemporalDistribution>(selectedId - 1)); // Renamed
         }
     }
 }

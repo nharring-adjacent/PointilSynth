@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm> // Required for std::remove_if
 #include <cmath>     // For std::pow, std::cos, std::sin
-#include "Resampler.h" // For Resampler::getSample
+#include "Pointilsynth/Resampler.h" // For Resampler::getSample
 
 // Forward declaration of AudioEngine if not fully defined in PointilismInterfaces.h
 // Or ensure PointilismInterfaces.h has full class definition before this point.
@@ -23,9 +23,9 @@ void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
     currentSampleRate = sampleRate;
     oscillator_.setSampleRate(sampleRate);
-    stochasticModel.sampleRate_.store(sampleRate); // Update stochastic model's sample rate
-    stochasticModel.setSampleRate(sampleRate); // Inform StochasticModel
-    samplesUntilNextGrain_ = stochasticModel.getSamplesUntilNextEvent();
+    // stochasticModel.sampleRate_.store(sampleRate); // This line is redundant and accesses private member
+    stochasticModel.setSampleRate(sampleRate); // Inform StochasticModel using public setter
+    samplesUntilNextGrain = stochasticModel.getSamplesUntilNextEvent(); // Corrected variable name
     grains.reserve(1024); // Keep existing functionality
 }
 
@@ -55,15 +55,15 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
     const int numSamples = buffer.getNumSamples();
 
     // Update the countdown for the next grain event
-    samplesUntilNextGrain_ -= numSamples;
+    samplesUntilNextGrain -= numSamples; // Corrected variable name
 
     // Trigger new grains if the countdown has elapsed
-    while (samplesUntilNextGrain_ <= 0)
+    while (samplesUntilNextGrain <= 0) // Corrected variable name
     {
         triggerNewGrain();
         // Add the full duration for the next event, plus any "overshoot" from the current block.
         // This maintains more accurate timing for grain generation.
-        samplesUntilNextGrain_ += stochasticModel.getSamplesUntilNextEvent();
+    samplesUntilNextGrain += stochasticModel.getSamplesUntilNextEvent(); // Corrected variable name
         // Note: StochasticModel::getSamplesUntilNextEvent() must return a positive value
         // to prevent potential infinite loops if it could return 0 or negative.
     }
@@ -95,7 +95,10 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
             // A. Fetch source sample based on grain's source type
             if (currentSourceType_.load() == GrainSourceType::Oscillator)
             {
-                float frequency = static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(grain.pitch));
+                // Correctly call getMidiNoteInHertz for the available JUCE version (expects int for note number)
+                int midiNote = static_cast<int>(std::round(grain.pitch)); // Round to nearest integer MIDI note
+                double freqInHzAsDouble = juce::MidiMessage::getMidiNoteInHertz(midiNote); // Uses default A=440Hz
+                float frequency = static_cast<float>(freqInHzAsDouble);
                 oscillator_.setFrequency(frequency); // Tune the shared oscillator
                 sourceSample = oscillator_.getNextSample(); // Process and advance oscillator
             }
@@ -111,7 +114,7 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
                     // Advance grain's internal playback position for the audio sample, adjusted by pitch
                     float baseMidiNote = 60.0f; // MIDI note 60 is normal speed
                     float pitchRatio = std::pow(2.0f, (grain.pitch - baseMidiNote) / 12.0f);
-                    grain.sourceSamplePosition += pitchRatio;
+                    grain.sourceSamplePosition += static_cast<double>(pitchRatio);
 
                     // Note: Resampler::getSample should handle grain.sourceSamplePosition going out of bounds.
                 }
