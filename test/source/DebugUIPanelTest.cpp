@@ -2,8 +2,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h> // For ValueTree
 #include "DebugUIPanel.h"
-#include "PointilismInterfaces.h"
-#include "StochasticModel.h" // Required for StochasticModel implementation
+#include "PointilismInterfaces.h" // This should provide StochasticModel definition
 
 // Helper struct to manage the model and panel for tests
 // Assumes StochasticModel default constructor provides consistent initial values for all its parameters.

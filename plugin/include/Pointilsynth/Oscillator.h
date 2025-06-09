@@ -30,7 +30,7 @@ public:
         spec.numChannels = 1;
 
         // Initialise with sine by default
-        osc.initialise([](float x){ return std::sin(x); }, tableSize);
+        osc.initialise([](float x){ return std::sin(x); }, static_cast<size_t>(tableSize));
         osc.prepare(spec);
         osc.setFrequency(frequency, true);
     }
@@ -42,7 +42,7 @@ public:
         // For Noise, we don't use the juce::dsp::Oscillator in the same way.
         if (currentWaveform == Waveform::Sine)
         {
-            osc.initialise([](float x){ return std::sin(x); }, tableSize);
+            osc.initialise([](float x){ return std::sin(x); }, static_cast<size_t>(tableSize));
         }
         else if (currentWaveform == Waveform::Saw)
         {
@@ -52,13 +52,13 @@ public:
             // So, x goes from 0 to 2*PI.
             // A sawtooth wave normally goes from -1 to 1.
             // x / PI - 1 would map [0, 2PI] to [-1, 1]
-            osc.initialise([](float x){ return (x / juce::MathConstants<float>::pi) - 1.0f; }, tableSize);
+            osc.initialise([](float x){ return (x / juce::MathConstants<float>::pi) - 1.0f; }, static_cast<size_t>(tableSize));
         }
         else if (currentWaveform == Waveform::Square)
         {
             // x goes from 0 to 2*PI.
             // Square: +1 for first half (0 to PI), -1 for second half (PI to 2*PI)
-            osc.initialise([](float x){ return (x < juce::MathConstants<float>::pi) ? 1.0f : -1.0f; }, tableSize);
+            osc.initialise([](float x){ return (x < juce::MathConstants<float>::pi) ? 1.0f : -1.0f; }, static_cast<size_t>(tableSize));
         }
         // For Noise, osc is not used, so no specific initialisation needed here for it.
         // Ensure frequency is set after re-initialising, as initialise might reset it.
@@ -72,7 +72,7 @@ public:
 
     void setSampleRate(double newSampleRate)
     {
-        if (sampleRate != newSampleRate)
+        if (!juce::approximatelyEqual(sampleRate, newSampleRate))
         {
             sampleRate = newSampleRate;
 
@@ -90,7 +90,7 @@ public:
 
     void setFrequency(float newFrequency)
     {
-        if (frequency != newFrequency)
+        if (!juce::approximatelyEqual(frequency, newFrequency))
         {
             frequency = newFrequency;
             if (currentWaveform != Waveform::Noise)

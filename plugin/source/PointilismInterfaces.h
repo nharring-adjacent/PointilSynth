@@ -5,7 +5,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 
 #include "Pointilsynth/Oscillator.h"
-#include "GrainEnvelope.h"
+#include "../include/Pointilsynth/GrainEnvelope.h"
 
 #include <vector>
 #include <random>
@@ -63,39 +63,37 @@ public:
         dispersion.store(dispersionValue);
         pitchDistribution = std::normal_distribution<float>(centralPitchValue, dispersionValue);
     }
-    void setDurationAndVariation(float averageDurationMsValue, float variationValue) {
-        averageDurationMs_.store(averageDurationMsValue);
-        durationVariation_.store(variationValue);
-        // Assuming variationValue is a multiplier for stddev: e.g. 0.1 for 10%
-        // Ensure stddev is not negative if variationValue can be large.
-        float stdDev = averageDurationMsValue * variationValue;
-        durationDistribution = std::normal_distribution<float>(averageDurationMsValue, stdDev > 0 ? stdDev : 0.001f);
-    }
-    void setPanAndSpread(float centralPanValue, float spreadValue) {
+    void setDurationAndVariation(float averageDurationMsValue, float variationValue); // Remove inline definition
+    // {
+    //     averageDurationMs_.store(averageDurationMsValue);
+    //     durationVariation_.store(variationValue);
+    //     // Assuming variationValue is a multiplier for stddev: e.g. 0.1 for 10%
+    //     // Ensure stddev is not negative if variationValue can be large.
+    //     float stdDev = averageDurationMsValue * variationValue;
+    //     durationDistribution = std::normal_distribution<float>(averageDurationMsValue, stdDev > 0 ? stdDev : 0.001f);
+    // }
+    void setPanAndSpread(float centralPanValue, float spreadValue) { // Keep this inline if no redefinition error for it
         centralPan.store(centralPanValue);
         panSpread.store(spreadValue);
         panDistribution = std::normal_distribution<float>(centralPanValue, spreadValue);
     }
-    void setGlobalDensity(float densityValue) { // Renamed from setDensity
-        globalDensity_.store(densityValue); // Updated from grainsPerSecond_ to globalDensity_ and parameter name
-        // If Poisson distribution rate depends on this, update here.
-        // e.g., if using globalDensity_ directly for poisson lambda:
-        // poissonDistribution_ = std::poisson_distribution<int>(densityValue);
-        // More likely, it's related to sampleRate: events_per_sample = densityValue / sampleRate
-        // And then lambda = events_per_sample * block_size for poisson events per block.
-        // This logic is typically in getSamplesUntilNextEvent() or similar.
-    }
-    void setGlobalMinDistance(float minDistValue) { globalMinDistance_.store(minDistValue); }
-    void setGlobalPitchOffset(int pitchOffsetValue) { globalPitchOffset_.store(pitchOffsetValue); }
+    void setGlobalDensity(float densityValue); // Changed to declaration
+    // {
+    //     globalDensity_.store(densityValue);
+    //     // ... comments ...
+    // }
+    void setGlobalMinDistance(float minDistValue) { globalMinDistance_.store(minDistValue); } // Keep inline if no issue
+    void setGlobalPitchOffset(int pitchOffsetValue) { globalPitchOffset_.store(pitchOffsetValue); } // Keep inline
     void setGlobalPanOffset(float panOffsetValue) { globalPanOffset_.store(panOffsetValue); }
     void setGlobalVelocityOffset(float velocityOffsetValue) { globalVelocityOffset_.store(velocityOffsetValue); }
     void setGlobalDurationOffset(float durationOffsetValue) { globalDurationOffset_.store(durationOffsetValue); }
     void setGlobalTempoSyncEnabled(bool tempoSyncEnabledValue) { globalTempoSyncEnabled_.store(tempoSyncEnabledValue); }
-    void setGlobalNumVoices(int numVoicesValue) { globalNumVoices_.store(numVoicesValue); }
-    void setGlobalNumGrains(int numGrainsValue) { globalNumGrains_.store(numGrainsValue); }
-    void setGlobalTemporalDistribution(TemporalDistribution modelValue) { // Renamed from setTemporalDistribution
-        globalTemporalDistribution_.store(modelValue); // Updated from temporalDistributionModel_
-    }
+    void setGlobalNumVoices(int numVoicesValue) { globalNumVoices_.store(numVoicesValue); } // Keep inline
+    void setGlobalNumGrains(int numGrainsValue) { globalNumGrains_.store(numGrainsValue); } // Keep inline
+    void setGlobalTemporalDistribution(TemporalDistribution modelValue); // Changed to declaration
+    // {
+    //     globalTemporalDistribution_.store(modelValue);
+    // }
 
     //==============================================================================
     // Parameter Getters (called by UI thread via DebugUIPanel)
@@ -167,15 +165,11 @@ private:
     std::normal_distribution<float> durationDistribution { averageDurationMs_.load(), averageDurationMs_.load() * durationVariation_.load() };
 
 public: // Public setter for sample rate, to be called by AudioEngine
-    void setSampleRate(double sr) {
-        sampleRate_.store(sr);
-        // Update any distributions or parameters that depend on the sample rate.
-        // For example, if poissonDistribution_ is for events per second:
-        // poissonDistribution_ = std::poisson_distribution<double>(globalDensity_.load()); // Updated from grainsPerSecond_
-        // And then getSamplesUntilNextEvent translates this to samples.
-        // Or if it's events per block (more complex here).
-        // For now, just storing it. The getSamplesUntilNextEvent() will need to use sampleRate_ correctly.
-    }
+    void setSampleRate(double sr); // Changed to declaration
+    // {
+    //     sampleRate_.store(sr);
+    //     // ... comments ...
+    // };
 };
 
 
