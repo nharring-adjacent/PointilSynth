@@ -30,7 +30,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
     ${PROJECT_SOURCE_DIR}/Source
     ${PROJECT_SOURCE_DIR}/plugin/source
-    ${PROJECT_SOURCE_DIR}/plugin/include/
 )
 target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 
