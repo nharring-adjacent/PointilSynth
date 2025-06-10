@@ -1,6 +1,6 @@
 #pragma once
 
-#include "juce_core/juce_core.h" // For juce::File
+#include <juce_core/juce_core.h> // For juce::File
 #include "nlohmann/json.hpp"     // For nlohmann::json
 #include "../../plugin/source/PointilismInterfaces.h" // For StochasticModel
 
