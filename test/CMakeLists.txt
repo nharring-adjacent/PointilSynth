@@ -7,6 +7,7 @@ include(GoogleTest) # For GTest::gtest_main and gtest_discover_tests
 set(TEST_SOURCE_FILES
     source/AudioProcessorTest.cpp
     source/PresetManagerTest.cpp
+    source/TestMain.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
@@ -14,6 +15,7 @@ juce_add_console_app(${PROJECT_NAME}
     SOURCES 
         source/AudioProcessorTest.cpp
         source/PresetManagerTest.cpp
+        source/TestMain.cpp
     MODULES
         juce_core
         juce_events
@@ -28,7 +30,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
     ${PROJECT_SOURCE_DIR}/Source
     ${PROJECT_SOURCE_DIR}/plugin/source
-    ${PROJECT_SOURCE_DIR}/plugin/include
+    ${PROJECT_SOURCE_DIR}/plugin/include/
 )
 target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 

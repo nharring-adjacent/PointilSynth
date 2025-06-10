@@ -1,22 +1,10 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_core/juce_core.h> // For DBG, juce::File
-#include "PointilismInterfaces.h"
+#include "Pointilsynth/PointilismInterfaces.h"
 #include <vector>
 #include <algorithm> // Required for std::remove_if
 #include <cmath>     // For std::pow, std::cos, std::sin
-#include "Resampler.h" // For Resampler::getSample
-
-// Forward declaration of AudioEngine if not fully defined in PointilismInterfaces.h
-// Or ensure PointilismInterfaces.h has full class definition before this point.
-// Assuming PointilismInterfaces.h contains:
-// class AudioEngine {
-// public:
-//     void prepareToPlay(double sampleRate, int samplesPerBlock);
-//     // ... other members
-// private:
-//     std::vector<Grain> grains;
-//     // ... other members
-// };
+#include "Pointilsynth/Resampler.h" // For Resampler::getSample
 
 
 void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
