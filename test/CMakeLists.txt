@@ -30,9 +30,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/plugin/source
     ${PROJECT_SOURCE_DIR}/plugin/include
 )
-target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES})
+target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 
-# Removed: set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
+# Removed: set_source_files_properties(${TEST_SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 # JUCE toolchain should handle appropriate warnings.
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
