@@ -5,15 +5,19 @@ namespace audio_plugin {
 
 PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
     audio_plugin::AudioPluginAudioProcessor& p)
-    : juce::AudioProcessorEditor(&p), processorRef(p) {
+    : juce::AudioProcessorEditor(&p), processorRef(p), debugUIPanel(p.getStochasticModel()) {
     // Add and make visible the PodComponents
     addAndMakeVisible(pitchPod);
     addAndMakeVisible(densityPod);
     addAndMakeVisible(durationPod);
     addAndMakeVisible(panPod);
 
+    // Add and make visible the DebugUIPanel
+    addAndMakeVisible(debugUIPanel);
+
     // Set the size of the editor window.
-    setSize(600, 400); // Example size, can be adjusted
+    // Adjust size if necessary to fit debugUIPanel
+    setSize(1000, 600); // Increased size to accommodate the DebugUIPanel initially used in tests
 
 }
 
@@ -36,11 +40,12 @@ void PointillisticSynthAudioProcessorEditor::paint(juce::Graphics& g) {
 void PointillisticSynthAudioProcessorEditor::resized() {
     auto bounds = getLocalBounds();
 
-    // Top two-thirds for visualization (currently empty or placeholder)
-    bounds.removeFromTop(getHeight() * 2 / 3);
+    // Top two-thirds for DebugUIPanel
+    auto debugPanelArea = bounds.removeFromTop(getHeight() * 2 / 3);
+    debugUIPanel.setBounds(debugPanelArea);
 
     // Bottom third for the pods
-    auto podArea = bounds;
+    auto podArea = bounds; // podArea is now the remaining bottom 1/3
     int podWidth = podArea.getWidth() / 4;
 
     pitchPod.setBounds(podArea.removeFromLeft(podWidth));
