@@ -1,6 +1,7 @@
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce::juce_events.h>
+#include <juce::juce_gui_basics.h>
 
 // Forward declaration
 class PresetManager;

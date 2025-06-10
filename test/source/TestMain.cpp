@@ -1,5 +1,5 @@
-#include <juce_core/juce_core.h>
-#include <juce_unittest/juce_unittest.h> // For UnitTestRunner
+#include <juce/juce_core.h>
+#include <juce/juce_unittest.h> // For UnitTestRunner
 
 // This main function will run all JUCE unit tests linked into the executable.
 // If DebugUIPanelTest.cpp (and any other JUCE test files) has a static instance

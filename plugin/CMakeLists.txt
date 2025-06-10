@@ -27,23 +27,47 @@ juce_add_plugin(
   VST3 # 
   PRODUCT_NAME
   "PointillisticSynth" 
+  MODULES
+  juce_audio_basics
+  juce_audio_processors
+  juce_audio_utils 
+  juce_core
+  juce_gui_basics
+  juce_events
   LINK_LIBRARIES
   GTest::gtest
 )
 
 # Sets the source files of the plugin project.
-set(SOURCE_FILES source/PluginProcessor.cpp source/AudioEngine.cpp source/PluginEditor.cpp)
+set(SOURCE_FILES
+  source/AudioEngine.cpp
+  source/DebugUIPanel.cpp
+  source/PluginEditor.cpp
+  source/PluginProcessor.cpp
+  source/PodComponent.cpp
+  source/PresetBrowserComponent.cpp
+  source/PresetManager.cpp
+  source/StochasticModel.cpp
+  source/VisualizationComponent.cpp
+)
+
 # Optional; includes header files in the project file tree in Visual Studio
-set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h source/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h ${INCLUDE_DIR}/UI/PodComponent.h)
+set(HEADER_FILES
+	${INCLUDE_DIR}/PluginEditor.h
+	${INCLUDE_DIR}/PluginProcessor.h
+	source/DebugUIPanel.h
+	source/PodComponent.h
+	source/PointilismInterfaces.h
+	source/PresetBrowserComponent.h
+	source/PresetManager.h
+	source/VisualizationComponent.h
+)
+
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Links to all necessary dependencies. The present ones are recommended by JUCE.
-# If you use one of the additional modules, like the DSP module, you need to specify it here.
-target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core)
-  
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
                          juce::juce_recommended_warning_flags
