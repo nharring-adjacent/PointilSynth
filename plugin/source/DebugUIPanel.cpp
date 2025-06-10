@@ -10,7 +10,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     pitchSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     pitchSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     pitchSlider.setRange(20.0, 100.0, 0.1); // MIDI note numbers
-    if (stochasticModel) pitchSlider.setValue(stochasticModel->getPitch(), juce::dontSendNotification);
+    if (stochasticModel) pitchSlider.setValue(static_cast<double>(stochasticModel->getPitch()), juce::dontSendNotification);
     pitchSlider.onValueChange = [this] { pitchSliderChanged(); };
     addAndMakeVisible(pitchLabel);
     pitchLabel.setText("Pitch", juce::dontSendNotification);
@@ -21,7 +21,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     dispersionSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     dispersionSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     dispersionSlider.setRange(0.0, 24.0, 0.1); // Semitones
-    if (stochasticModel) dispersionSlider.setValue(stochasticModel->getDispersion(), juce::dontSendNotification);
+    if (stochasticModel) dispersionSlider.setValue(static_cast<double>(stochasticModel->getDispersion()), juce::dontSendNotification);
     dispersionSlider.onValueChange = [this] { dispersionSliderChanged(); };
     addAndMakeVisible(dispersionLabel);
     dispersionLabel.setText("Dispersion", juce::dontSendNotification);
@@ -32,7 +32,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     durationSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     durationSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     durationSlider.setRange(10.0, 1000.0, 1.0); // Milliseconds
-    if (stochasticModel) durationSlider.setValue(stochasticModel->getAverageDurationMs(), juce::dontSendNotification);
+    if (stochasticModel) durationSlider.setValue(static_cast<double>(stochasticModel->getAverageDurationMs()), juce::dontSendNotification);
     durationSlider.onValueChange = [this] { durationSliderChanged(); };
     addAndMakeVisible(durationLabel);
     durationLabel.setText("Duration (ms)", juce::dontSendNotification);
@@ -43,7 +43,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     durationVariationSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     durationVariationSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     durationVariationSlider.setRange(0.0, 1.0, 0.01); // Percentage
-    if (stochasticModel) durationVariationSlider.setValue(stochasticModel->getDurationVariation(), juce::dontSendNotification);
+    if (stochasticModel) durationVariationSlider.setValue(static_cast<double>(stochasticModel->getDurationVariation()), juce::dontSendNotification);
     durationVariationSlider.onValueChange = [this] { durationVariationSliderChanged(); };
     addAndMakeVisible(durationVariationLabel);
     durationVariationLabel.setText("Duration Var.", juce::dontSendNotification);
@@ -54,7 +54,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     panSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     panSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     panSlider.setRange(-1.0, 1.0, 0.01); // -1 (L) to 1 (R)
-    if (stochasticModel) panSlider.setValue(stochasticModel->getCentralPan(), juce::dontSendNotification);
+    if (stochasticModel) panSlider.setValue(static_cast<double>(stochasticModel->getCentralPan()), juce::dontSendNotification);
     panSlider.onValueChange = [this] { panSliderChanged(); };
     addAndMakeVisible(panLabel);
     panLabel.setText("Pan", juce::dontSendNotification);
@@ -65,7 +65,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     panSpreadSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     panSpreadSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     panSpreadSlider.setRange(0.0, 1.0, 0.01); // Spread amount
-    if (stochasticModel) panSpreadSlider.setValue(stochasticModel->getPanSpread(), juce::dontSendNotification);
+    if (stochasticModel) panSpreadSlider.setValue(static_cast<double>(stochasticModel->getPanSpread()), juce::dontSendNotification);
     panSpreadSlider.onValueChange = [this] { panSpreadSliderChanged(); };
     addAndMakeVisible(panSpreadLabel);
     panSpreadLabel.setText("Pan Spread", juce::dontSendNotification);
@@ -76,7 +76,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     densitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
     densitySlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
     densitySlider.setRange(0.1, 50.0, 0.1); // Grains per second
-    if (stochasticModel) densitySlider.setValue(stochasticModel->getGrainsPerSecond(), juce::dontSendNotification);
+    if (stochasticModel) densitySlider.setValue(static_cast<double>(stochasticModel->getGlobalDensity()), juce::dontSendNotification);
     densitySlider.onValueChange = [this] { densitySliderChanged(); };
     addAndMakeVisible(densityLabel);
     densityLabel.setText("Density (gr/s)", juce::dontSendNotification);
@@ -86,7 +86,7 @@ DebugUIPanel::DebugUIPanel(StochasticModel* model) : stochasticModel(model)
     addAndMakeVisible(temporalDistributionComboBox);
     temporalDistributionComboBox.addItem("Uniform", static_cast<int>(StochasticModel::TemporalDistribution::Uniform) + 1);
     temporalDistributionComboBox.addItem("Poisson", static_cast<int>(StochasticModel::TemporalDistribution::Poisson) + 1);
-    if (stochasticModel) temporalDistributionComboBox.setSelectedId(static_cast<int>(stochasticModel->getTemporalDistributionModel()) + 1, juce::dontSendNotification);
+    if (stochasticModel) temporalDistributionComboBox.setSelectedId(static_cast<int>(stochasticModel->getGlobalTemporalDistribution()) + 1, juce::dontSendNotification);
     temporalDistributionComboBox.onChange = [this] { temporalDistributionChanged(); };
     addAndMakeVisible(temporalDistributionLabel);
     temporalDistributionLabel.setText("Distribution", juce::dontSendNotification);
@@ -150,43 +150,43 @@ void DebugUIPanel::resized()
 void DebugUIPanel::pitchSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPitchAndDispersion(pitchSlider.getValue(), dispersionSlider.getValue());
+        stochasticModel->setPitchAndDispersion(static_cast<float>(pitchSlider.getValue()), static_cast<float>(dispersionSlider.getValue()));
 }
 
 void DebugUIPanel::dispersionSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPitchAndDispersion(pitchSlider.getValue(), dispersionSlider.getValue());
+        stochasticModel->setPitchAndDispersion(static_cast<float>(pitchSlider.getValue()), static_cast<float>(dispersionSlider.getValue()));
 }
 
 void DebugUIPanel::durationSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setDurationAndVariation(durationSlider.getValue(), durationVariationSlider.getValue());
+        stochasticModel->setDurationAndVariation(static_cast<float>(durationSlider.getValue()), static_cast<float>(durationVariationSlider.getValue()));
 }
 
 void DebugUIPanel::durationVariationSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setDurationAndVariation(durationSlider.getValue(), durationVariationSlider.getValue());
+        stochasticModel->setDurationAndVariation(static_cast<float>(durationSlider.getValue()), static_cast<float>(durationVariationSlider.getValue()));
 }
 
 void DebugUIPanel::panSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPanAndSpread(panSlider.getValue(), panSpreadSlider.getValue());
+        stochasticModel->setPanAndSpread(static_cast<float>(panSlider.getValue()), static_cast<float>(panSpreadSlider.getValue()));
 }
 
 void DebugUIPanel::panSpreadSliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setPanAndSpread(panSlider.getValue(), panSpreadSlider.getValue());
+        stochasticModel->setPanAndSpread(static_cast<float>(panSlider.getValue()), static_cast<float>(panSpreadSlider.getValue()));
 }
 
 void DebugUIPanel::densitySliderChanged()
 {
     if (stochasticModel)
-        stochasticModel->setDensity(densitySlider.getValue());
+        stochasticModel->setGlobalDensity(static_cast<float>(densitySlider.getValue()));
 }
 
 void DebugUIPanel::temporalDistributionChanged()
@@ -196,7 +196,7 @@ void DebugUIPanel::temporalDistributionChanged()
         int selectedId = temporalDistributionComboBox.getSelectedId();
         // Enum values are 0-indexed, ComboBox IDs are 1-indexed
         if (selectedId > 0) {
-             stochasticModel->setTemporalDistribution(static_cast<StochasticModel::TemporalDistribution>(selectedId - 1));
+             stochasticModel->setGlobalTemporalDistribution(static_cast<StochasticModel::TemporalDistribution>(selectedId - 1));
         }
     }
 }

@@ -465,7 +465,9 @@ out/
 CMakeFiles/
 _build/
 *Makefile
-plugin/PointillisticSynth_artefacts/
+*/PointillisticSynth_artefacts/
+*/PointilSynthTests_artefacts/
+Testing/
 
 # MacStuff
 .DS_Store*

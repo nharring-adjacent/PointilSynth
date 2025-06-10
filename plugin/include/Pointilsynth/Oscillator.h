@@ -72,7 +72,7 @@ public:
 
     void setSampleRate(double newSampleRate)
     {
-        if (!juce::approximatelyEqual(sampleRate, newSampleRate))
+        if (sampleRate != newSampleRate)
         {
             sampleRate = newSampleRate;
 
@@ -90,7 +90,7 @@ public:
 
     void setFrequency(float newFrequency)
     {
-        if (!juce::approximatelyEqual(frequency, newFrequency))
+        if (frequency != newFrequency)
         {
             frequency = newFrequency;
             if (currentWaveform != Waveform::Noise)
