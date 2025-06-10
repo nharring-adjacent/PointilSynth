@@ -26,6 +26,15 @@ juce_add_console_app(${PROJECT_NAME}
     LINK_LIBRARIES PointillisticSynth GTest::gtest
 )
 
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    juce::juce_core
+    juce::juce_events
+    juce::juce_gui_basics
+    juce::juce_unittest
+    juce::juce_audio_processors
+    juce::juce_audio_basics
+)
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
     ${PROJECT_SOURCE_DIR}/Source
