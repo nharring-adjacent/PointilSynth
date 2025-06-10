@@ -55,4 +55,4 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CU
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
 # In Visual Studio this command provides a nice grouping of source files in "filters".
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)

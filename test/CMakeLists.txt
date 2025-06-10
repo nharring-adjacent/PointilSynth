@@ -8,13 +8,20 @@ set(TEST_SOURCE_FILES
     source/AudioProcessorTest.cpp
     source/PresetManagerTest.cpp
 )
+set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
 juce_add_console_app(${PROJECT_NAME}
-    SOURCES ${TEST_SOURCE_FILES}
-    # Note: If TARGET_LIBRARIES is not a valid keyword for juce_add_console_app,
-    # this will cause an error, and linking will need to be done via
-    # a separate target_link_libraries command.
-    TARGET_LIBRARIES PointillisticSynth GTest::gtest_main
+    SOURCES 
+        source/AudioProcessorTest.cpp
+        source/PresetManagerTest.cpp
+    MODULES
+        juce_core
+        juce_events
+        juce_gui_basics         # For DebugUIPanel and ScopedJuceInitialiser_GUI
+        juce_unittest         # For UnitTestRunner and test macros
+        juce_audio_processors # For APVTS in PanelTestFixtureA
+        juce_audio_basics
+    LINK_LIBRARIES PointillisticSynth GTest::gtest_main
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -23,6 +30,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/plugin/source
     ${PROJECT_SOURCE_DIR}/plugin/include
 )
+target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES})
 
 # Removed: set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 # JUCE toolchain should handle appropriate warnings.
