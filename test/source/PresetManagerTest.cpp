@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
-#include "Source/Data/PresetManager.h" // Adjusted path
+#include "Data/PresetManager.h" // Adjusted path
 #include "plugin/source/PointilismInterfaces.h" // For StochasticModel
-#include "juce_core/juce_core.h"
+#include <juce_core/juce_core.h>
 #include "nlohmann/json.hpp"
 
 // Basic test suite structure

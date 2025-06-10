@@ -26,11 +26,14 @@ juce_add_console_app(${PROJECT_NAME}
     LINK_LIBRARIES PointillisticSynth GTest::gtest
 )
 
+target_link_libraries(
+  ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
+                         juce::juce_recommended_warning_flags
+)
+
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
-    ${PROJECT_SOURCE_DIR}/Source
-    ${PROJECT_SOURCE_DIR}/plugin/source
-    ${PROJECT_SOURCE_DIR}/plugin/include/
+    "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/include"
 )
 target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 

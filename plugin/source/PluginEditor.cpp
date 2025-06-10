@@ -5,7 +5,7 @@ namespace audio_plugin {
 
 PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
     audio_plugin::AudioPluginAudioProcessor& p)
-    : juce::AudioProcessorEditor(&p), processorRef(p) {
+    : juce::AudioProcessorEditor(&p), processorRef(p), debugUIPanel(processorRef.getStochasticModel()) {
     // Add and make visible the PodComponents
     addAndMakeVisible(pitchPod);
     addAndMakeVisible(densityPod);
