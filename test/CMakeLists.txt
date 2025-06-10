@@ -23,7 +23,7 @@ juce_add_console_app(${PROJECT_NAME}
         juce_unittest         # For UnitTestRunner and test macros
         juce_audio_processors # For APVTS in PanelTestFixtureA
         juce_audio_basics
-    LINK_LIBRARIES PointillisticSynth GTest::gtest_main
+    LINK_LIBRARIES PointillisticSynth GTest::gtest
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
