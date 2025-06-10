@@ -465,7 +465,6 @@ out/
 CMakeFiles/
 _build/
 *Makefile
-Testing/
 plugin/PointillisticSynth_artefacts/
 
 # MacStuff
