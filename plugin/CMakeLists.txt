@@ -11,7 +11,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth")
 juce_add_plugin(
   ${PROJECT_NAME}
   COMPANY_NAME
-  "HHI" # change this
+  "HHI" # 
   IS_SYNTH
   FALSE # may change this
   NEEDS_MIDI_INPUT
@@ -19,14 +19,14 @@ juce_add_plugin(
   NEEDS_MIDI_OUTPUT
   FALSE # may change this
   PLUGIN_MANUFACTURER_CODE
-  HHIS # change this (for max compatibility, first letter must be uppercase, remaining lowercase)
+  HHIS # 
   PLUGIN_CODE
-  Pntl # change this (for max compatibility, first letter must be uppercase, remaining lowercase)
+  Pntl # 
   FORMATS
   Standalone
-  VST3 # may change this
+  VST3 # 
   PRODUCT_NAME
-  "PointillisticSynth" # change this
+  "PointillisticSynth" 
 )
 
 # Sets the source files of the plugin project.
