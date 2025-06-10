@@ -54,7 +54,7 @@ public:
 
                 // Calculate ramp duration based on 10% of total duration, rounded.
                 // This 'rampSamples' is used for both attack and release.
-                int rampSamples = static_cast<int>(roundf(0.1f * totalDuration));
+                int rampSamples = static_cast<int>(std::round(0.1f * static_cast<float>(totalDuration)));
 
                 // If rounding resulted in 0 ramp samples for a duration > 1, set to at least 1 sample.
                 if (rampSamples == 0 && totalDuration > 1) {
