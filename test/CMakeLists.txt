@@ -26,13 +26,9 @@ juce_add_console_app(${PROJECT_NAME}
     LINK_LIBRARIES PointillisticSynth GTest::gtest
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE
-    juce::juce_core
-    juce::juce_events
-    juce::juce_gui_basics
-    juce::juce_unittest
-    juce::juce_audio_processors
-    juce::juce_audio_basics
+target_link_libraries(
+  ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
+                         juce::juce_recommended_warning_flags
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
