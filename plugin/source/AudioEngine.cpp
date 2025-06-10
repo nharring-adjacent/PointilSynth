@@ -82,7 +82,7 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
             // A. Fetch source sample based on grain's source type
             if (currentSourceType_.load() == GrainSourceType::Oscillator)
             {
-                double frequency = juce::MidiMessage::getMidiNoteInHertz(grain.pitch);
+                double frequency = juce::MidiMessage::getMidiNoteInHertz(static_cast<int>(std::round(grain.pitch)));
                 oscillator_.setFrequency(static_cast<float>(frequency)); // Tune the shared oscillator
                 sourceSample = oscillator_.getNextSample(); // Process and advance oscillator
             }
