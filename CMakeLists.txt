@@ -61,7 +61,7 @@ cpmaddpackage(
 )
 
 # Add compiler warning utilities
-include(cmake/CompilerWarnings.cmake)
+#include(cmake/CompilerWarnings.cmake)
 include(cmake/Util.cmake)
 
 # Adds all the targets configured in the "plugin" folder.
