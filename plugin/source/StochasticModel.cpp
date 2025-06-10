@@ -18,23 +18,20 @@ void StochasticModel::setDurationAndVariation(float averageDurationMs, float var
     durationVariation_ = variation;
 }
 
-// Renamed from setDensity to match declaration in PointilismInterfaces.h
-// Parameter name in .cpp can differ from .h, but using 'densityValue' for consistency with .h
-void StochasticModel::setGlobalDensity(float densityValue)
+void StochasticModel::setDensity(float grainsPerSecond)
 {
-    globalDensity_.store(densityValue); // Ensure member variable name also matches .h (globalDensity_)
+    grainsPerSecond_ = grainsPerSecond;
 }
 
-// Renamed from setTemporalDistribution to match declaration in PointilismInterfaces.h
-void StochasticModel::setGlobalTemporalDistribution(StochasticModel::TemporalDistribution modelValue)
+void StochasticModel::setTemporalDistribution(StochasticModel::TemporalDistribution model)
 {
-    globalTemporalDistribution_.store(modelValue); // Ensure member variable name also matches .h (globalTemporalDistribution_)
+    temporalDistributionModel_ = model;
 }
 
 void StochasticModel::setSampleRate(double newSampleRate)
 {
     sampleRate_ = newSampleRate;
-} // Added missing closing brace
+
 
 void StochasticModel::setPitchAndDispersion(float centralPitch, float dispersionAmount)
 {
@@ -74,7 +71,7 @@ void StochasticModel::generateNewGrain(Grain& newGrain)
         // For now, using a common default.
         currentSampleRate = 44100.0;
     }
-    newGrain.durationInSamples = static_cast<int>((static_cast<double>(randomizedDurationMs) / 1000.0) * currentSampleRate);
+    newGrain.durationInSamples = static_cast<int>((randomizedDurationMs / 1000.0) * currentSampleRate);
 
     // Other members of Grain (pitch, pan, amplitude, etc.) are not set here
     // as per the current task. They would be set by other parts of StochasticModel
@@ -103,9 +100,9 @@ void StochasticModel::generateNewGrain(Grain& newGrain)
 int StochasticModel::getSamplesUntilNextEvent()
 {
     // 1. Get atomic values
-    float currentGrainsPerSecond = globalDensity_.load(std::memory_order_relaxed); // Changed from grainsPerSecond_
+    float currentGrainsPerSecond = grainsPerSecond_.load(std::memory_order_relaxed);
     double currentSampleRate = sampleRate_.load(std::memory_order_relaxed);
-    TemporalDistribution currentModel = globalTemporalDistribution_.load(std::memory_order_relaxed); // Changed from temporalDistributionModel_
+    TemporalDistribution currentModel = temporalDistributionModel_.load(std::memory_order_relaxed);
 
     // 2. Validate inputs and calculate average samples per grain
     if (currentGrainsPerSecond <= 0.0f || currentSampleRate <= 0.0)
@@ -115,7 +112,7 @@ int StochasticModel::getSamplesUntilNextEvent()
         return INT_MAX;
     }
 
-    double averageSamplesPerGrain = currentSampleRate / static_cast<double>(currentGrainsPerSecond);
+    double averageSamplesPerGrain = currentSampleRate / currentGrainsPerSecond;
 
     // Check for potential issues with averageSamplesPerGrain before using it,
     // especially with the Poisson distribution.

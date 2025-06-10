@@ -18,7 +18,7 @@ namespace Resampler {
     const int WINDOW_SIDE_POINTS = 16;
 
     inline double sinc(double x) {
-        if (juce::approximatelyEqual(x, 0.0)) { // Or use std::abs(x) < epsilon for floating point comparison
+        if (x == 0.0) { // Or use std::abs(x) < epsilon for floating point comparison
             return 1.0;
         }
         double piX = M_PI * x;
@@ -95,7 +95,7 @@ namespace Resampler {
             double windowValue = blackmanWindow(kernelArg);
             double weightedSinc = sincValue * windowValue;
 
-            outputSample += static_cast<double>(sourceChannelData[k]) * weightedSinc;
+            outputSample += sourceChannelData[k] * weightedSinc;
         }
 
         return static_cast<float>(outputSample);
