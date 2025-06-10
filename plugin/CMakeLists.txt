@@ -54,7 +54,7 @@ target_link_libraries(
                          juce::juce_core # Already included by others, but explicit for clarity
                          juce::juce_events # Already included by others, but explicit for clarity
                          juce::juce_gui_basics # Already included by others, but explicit for clarity
-                         juce::juce_unittest # Make unittest module available
+#                         juce::juce_unittest # Make unittest module available
                          nlohmann_json::nlohmann_json
 )
 
@@ -66,4 +66,4 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CU
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
 # In Visual Studio this command provides a nice grouping of source files in "filters".
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
