@@ -13,31 +13,9 @@ void StochasticModel::setDurationAndVariation(float averageDurationMs, float var
     durationVariation_ = variation;
 }
 
-void StochasticModel::setDensity(float grainsPerSecond)
-{
-    grainsPerSecond_ = grainsPerSecond;
-}
-
-void StochasticModel::setTemporalDistribution(StochasticModel::TemporalDistribution model)
-{
-    temporalDistributionModel_ = model;
-}
-
 void StochasticModel::setSampleRate(double newSampleRate)
 {
     sampleRate_ = newSampleRate;
-
-
-void StochasticModel::setPitchAndDispersion(float centralPitch, float dispersionAmount)
-{
-    pitch.store(centralPitch);
-    dispersion.store(dispersionAmount);
-}
-
-void StochasticModel::setPanAndSpread(float newCentralPan, float newSpreadAmount)
-{
-    centralPan.store(newCentralPan);
-    panSpread.store(newSpreadAmount);
 }
 
 void StochasticModel::generateNewGrain(Grain& newGrain)
