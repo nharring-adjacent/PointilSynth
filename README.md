@@ -1,7 +1,6 @@
-Pointilistic Stochastic Textural Timbre Synthesis is LLM-speak for a granular synthesis engine that presents the user with controls to shape the geometry and composition of a point cloud of grains governed by stochastic probability with a beautiful and responsive interface that provides enough consistency and precision to build the kind of intuition required for confident live performance without hobbling the power of opening the geometry up wide and letting unbridled pseudorandomness flow.
 ## Project Overview
 
-Pointilistic Stochastic Textural Timbre Synthesis is LLM-speak for a granular synthesis engine that presents the user with controls to shape the geometry and composition of a point cloud of grains governed by stochastic probability with a beautiful and responsive interface that provides enough consistency and precision to build the kind of intuition required for confident live performance without hobbling the power of opening the geometry up wide and letting unbridled pseudorandomness flow.
+Pointilistic Stochastic Textural Timbre Synthesis is LLM-speak for a granular synthesis engine that presents the user with controls to shape the geometry and composition of a point cloud of grains governed by stochastic probability with a beautiful and responsive interface that provides enough consistency and precision to build the kind of intuition required for confident live performance without hobbling the power of opening the geometry up wide and letting unbridled pseudorandomness 
 
 This project aims to create a next-generation software instrument that empowers musicians, composers, and sound designers to intuitively sculpt complex, evolving sonic textures using principles of pointillism and stochastic generation. It's not just another subtractive synth; it's a tool for generating organic, non-linear soundscapes.
 
@@ -104,15 +103,28 @@ This project is built with C++ and the JUCE framework.
 
 ### Codebase Structure
 
-*   `Source/`: Contains the core C++ code for the synthesis engine and UI.
-    *   `Data/`: Manages presets and other data.
-    *   `UI/`: JUCE components for the user interface, including the visualization.
-*   `plugin/`: Platform-specific plugin wrapper code and shared plugin logic (Processor, Editor).
-    *   `include/Pointilsynth/`: Public headers for the core synth parts.
-    *   `source/`: Implementation files for the plugin logic.
+
+All core source code for the synthesizer, including the audio engine, UI components, and data management, is consolidated within the `plugin/` directory. The top-level `Source/` directory is no longer used for primary C++ development.
+
+*   `plugin/`: Contains all C++ source code for the plugin.
+    *   `include/Pointilsynth/`: Public C++ headers for the synthesizer's modules. This typically includes:
+        *   `PluginEditor.h`
+        *   `PluginProcessor.h`
+        *   Headers for UI elements (e.g., `VisualizationComponent.h`, `PresetBrowserComponent.h`)
+        *   Headers for data management (e.g., `PresetManager.h`)
+        *   Headers for DSP/engine components (e.g., `GrainEnvelope.h`, `Oscillator.h`)
+    *   `source/`: C++ implementation files. This includes:
+        *   `PluginEditor.cpp`
+        *   `PluginProcessor.cpp`
+        *   Implementation for UI elements.
+        *   Implementation for data management.
+        *   Implementation for DSP/engine components (e.g., `AudioEngine.cpp`, `StochasticModel.cpp`).
 *   `cmake/`: CMake scripts for building the project.
 *   `jules_docs/`: Project documentation, including requirements and design plans.
-*   `test/`: Unit tests for the project.
+*   `test/`: Unit tests for the project. Validates functionality within the `plugin/` codebase.
+
+(Note: The previous `Source/` directory and its subdirectories like `Source/Data/` and `Source/UI/` have been integrated into the `plugin/` directory structure.)
+
 
 ### Contribution Guidelines
 
@@ -126,65 +138,56 @@ This project is built with C++ and the JUCE framework.
     ```
 *   Write unit tests for new features or bug fixes.
 
-## Continuous Integration (CI)
+### Running Tests
 
-This project uses GitHub Actions for Continuous Integration. The CI pipeline is defined in `.github/workflows/cmake.yml`.
+The project includes a suite of unit tests. After building the project, you can typically find and run the test executable from your build directory.
 
-Key aspects of the CI setup:
-- **Triggers**: The CI workflow runs on every `push` and `pull_request` to the `main` branch.
-- **Platforms**: Builds are performed on `macos-latest` and `windows-latest`.
-- **Build System**: CMake is used to configure and build the project.
-- **Compilation**: The plugin and associated tests are compiled in `Debug` configuration.
-- **Testing**: After a successful build, tests are executed using CTest. The test results determine the success or failure of the CI run. Test failures will be reported in the GitHub Actions logs, including output from failed tests.
+```bash
+# Example: navigate to build directory and run tests
+cd build/test/
+./PointilSynth_Test # Or PointilSynth_Test.exe on Windows
+```
 
-## Building and Running Tests Locally
+## For the Curious & Sound Designers
 
-The project uses CMake for building and JUCE's unit testing framework (with GoogleTest utilities) for tests.
+### The Synthesis Technique: Pointillistic Stochastic Granular Synthesis
 
-### Prerequisites
-- A C++ compiler supporting C++20.
-- CMake (version 3.22 or higher).
-- Git.
+This instrument uses **granular synthesis**, where sound is constructed from tiny segments of audio called "grains." Instead of playing a continuous sound, it plays many small grains, often overlapping, to create complex textures.
 
-### Steps to Build and Test
+The "pointillistic" aspect refers to how these grains are generated and distributed, much like dots of paint in a pointillist painting. Each grain can have unique properties.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd <repository-directory>
-    ```
+The "stochastic" part means that these properties (like pitch, duration, pan, start time) are not fixed but are determined by probability distributions. You, the user, control the *shape* of these probabilities. For example, you don't set an exact pitch for all grains; you set a *central* pitch and a *dispersion* range, and the actual pitch of each grain is randomly chosen within that defined probabilistic range. This allows for the creation of sounds that feel organic, evolving, and unpredictable, yet controllable.
 
-2.  **Configure CMake:**
-    Create a build directory and run CMake configuration. This will download dependencies like JUCE and GoogleTest if they are not already present in the `libs` directory.
-    ```bash
-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-    ```
-    (You can replace `Debug` with `Release` for a release build).
+### Visualization
 
-3.  **Build:**
-    Compile the project (including the test executable).
-    ```bash
-    cmake --build build --config Debug
-    ```
-    (Adjust `--config` if you used a different build type).
+The central 2D visualization is key to understanding what's happening:
 
-4.  **Run Tests:**
-    The tests are run via CTest, which executes the `PointilSynthTests` test program.
-    Navigate to the build directory and run CTest:
-    ```bash
-    cd build
-    ctest -C Debug --output-on-failure
-    ```
-    (Adjust `-C Debug` if you used a different build type).
-    A successful test run will show all tests passing. If tests fail, CTest will report a non-zero exit code, and details of the failures will be printed to the console (due to `--output-on-failure`).
+*   **X-axis (Horizontal):** Represents the stereo position (panning) of a grain. Grains to the left are panned left, grains to the right are panned right.
+*   **Y-axis (Vertical):** Represents the pitch of a grain. Higher grains have higher pitches.
+*   **Appearance (Color, Size - *Planned*):** The visual properties of a grain (e.g., its color or size) will eventually reflect other properties like its audio source or duration, giving you an immediate visual summary of the texture's composition.
 
-    Alternatively, you can run the test executable directly after building:
-    On macOS/Linux:
-    ```bash
-    ./test/PointilSynthTests
-    ```
-    On Windows:
-    ```bash
-    .\test\Debug\PointilSynthTests.exe
-    ```
-    (The exact path might vary based on your generator and build type configuration. The `ctest` command is generally more portable.)
+By watching the visualization, you can intuitively grasp how the parameters you adjust are affecting the cloud of sound grains.
+
+### Creative Uses
+
+This synth excels at:
+
+*   **Atmospheric Pads:** Create dense, evolving soundscapes with subtle internal movement.
+*   **Complex Textures:** Generate rich, detailed sonic fabrics from any source audio.
+*   **Rhythmic Pulses:** Use the temporal distribution controls to create intricate, non-traditional rhythmic patterns.
+*   **Sound Effects:** Design unique and unusual sound effects by manipulating grain properties.
+*   **Experimental Sound Design:** Explore the boundaries of granular synthesis and stochastic processes.
+
+## Current Status & Roadmap
+
+This project is under active development. Key development phases (based on `jules_docs/sprint_master_plan.md`):
+
+*   **Core Engine & Stochastic Controls (Complete):** The fundamental sound generation and parameter logic are in place.
+*   **UI, Visualization & Preset Management (In Progress/Nearing Completion):** The main user interface, real-time visualization, and preset system are being finalized.
+*   **Modulation System (V2 - Future):** Planned features include LFOs and ADSR envelopes for animating parameters over time.
+
+See `jules_docs/sprint_master_plan.md` for more details on past and future development sprints.
+
+## License
+
+This project is licensed under the terms of the LICENSE.md file.
