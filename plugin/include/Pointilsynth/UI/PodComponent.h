@@ -13,7 +13,7 @@ public:
         // Placeholder: fill with a color to see it
         g.fillAll(juce::Colours::blue.withAlpha(0.5f));
         g.setColour(juce::Colours::white);
-        g.drawRect(getLocalBounds(), 1.f);
+        g.drawRect(getLocalBounds(), static_cast<int>(1.f));
         g.drawText("Pod", getLocalBounds(), juce::Justification::centred, false);
     }
 
