@@ -1,4 +1,6 @@
 #include "PodComponent.h"
+include <cmath> // For std::abs
+#include <limits> // For std::numeric_limits
 
 PodComponent::PodComponent() : value(0.0f), lastMouseY(0.0f)
 {
@@ -18,8 +20,8 @@ void PodComponent::setName(const juce::String& newName)
 
 void PodComponent::setValue(float newValue, juce::NotificationType notification)
 {
-    if (value != newValue)
-    {
+    if (std::abs(value - newValue) > std::numeric_limits<float>::epsilon())
+{
         value = newValue;
         repaint(); // Repaint to reflect the new value
 

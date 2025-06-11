@@ -8,6 +8,7 @@ class PodComponent : public juce::Component {
 public:
     PodComponent() {}
     ~PodComponent() override {}
+    void setName(const juce::String& newName) override;
 
     void paint(juce::Graphics& g) override {
         // Placeholder: fill with a color to see it
