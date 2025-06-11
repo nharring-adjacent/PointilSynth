@@ -3,6 +3,7 @@
 #include <juce_dsp/juce_dsp.h>
 #include <juce_audio_basics/juce_audio_basics.h> // For juce::Random
 #include <cmath> // For std::sin, std::fmod
+#include <limits> // For std::numeric_limits
 
 namespace Pointilsynth
 {
@@ -72,7 +73,7 @@ public:
 
     void setSampleRate(double newSampleRate)
     {
-        if (!juce::approximatelyEqual(sampleRate, newSampleRate))
+        if (std::abs(sampleRate - newSampleRate) > std::numeric_limits<double>::epsilon())
         {
             sampleRate = newSampleRate;
 
@@ -90,7 +91,7 @@ public:
 
     void setFrequency(float newFrequency)
     {
-        if (!juce::approximatelyEqual(frequency, newFrequency))
+        if (std::abs(frequency - newFrequency) > std::numeric_limits<float>::epsilon())
         {
             frequency = newFrequency;
             if (currentWaveform != Waveform::Noise)

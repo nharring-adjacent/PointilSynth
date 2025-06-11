@@ -6,6 +6,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 
 #include <cmath> // For std::sin, std::cos, std::abs, std::round
+#include <limits> // For std::numeric_limits
 
 // Define M_PI if not already defined (e.g., on Windows with MSVC, or if <cmath> doesn't provide it by default)
 // C++17 and later prefer std::numbers::pi from <numbers>
@@ -18,7 +19,7 @@ namespace Resampler {
     const int WINDOW_SIDE_POINTS = 16;
 
     inline double sinc(double x) {
-        if (juce::approximatelyEqual(x, 0.0)) { // Or use std::abs(x) < epsilon for floating point comparison
+        if (std::abs(x) < std::numeric_limits<double>::epsilon()) { // Or use std::abs(x) < epsilon for floating point comparison
             return 1.0;
         }
         double piX = M_PI * x;

@@ -11,7 +11,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth")
 juce_add_plugin(
   ${PROJECT_NAME}
   COMPANY_NAME
-  "HHI" # change this
+  "HHI" # 
   IS_SYNTH
   FALSE # may change this
   NEEDS_MIDI_INPUT
@@ -19,27 +19,22 @@ juce_add_plugin(
   NEEDS_MIDI_OUTPUT
   FALSE # may change this
   PLUGIN_MANUFACTURER_CODE
-  HHIS # change this (for max compatibility, first letter must be uppercase, remaining lowercase)
+  HHIS # 
   PLUGIN_CODE
-  Pntl # change this (for max compatibility, first letter must be uppercase, remaining lowercase)
+  Pntl # 
   FORMATS
   Standalone
-  VST3 # may change this
+  VST3 # 
   PRODUCT_NAME
-  "PointillisticSynth" # change this
+  "PointillisticSynth" 
+  LINK_LIBRARIES
+  GTest::gtest
 )
 
 # Sets the source files of the plugin project.
-set(SOURCE_FILES
-    source/PluginProcessor.cpp
-    source/AudioEngine.cpp
-    source/PluginEditor.cpp
-    source/StochasticModel.cpp
-    source/DebugUIPanel.cpp
-    source/PodComponent.cpp
-)
+set(SOURCE_FILES source/PluginProcessor.cpp source/AudioEngine.cpp source/PluginEditor.cpp)
 # Optional; includes header files in the project file tree in Visual Studio
-set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h source/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h ${INCLUDE_DIR}/UI/PodComponent.h source/DebugUIPanel.h) # Added DebugUIPanel.h
+set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h source/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h ${INCLUDE_DIR}/UI/PodComponent.h)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
@@ -47,14 +42,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
-target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_dsp) # Added juce::juce_dsp
+target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core)
+  
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
                          juce::juce_recommended_warning_flags
-                         juce::juce_core # Already included by others, but explicit for clarity
-                         juce::juce_events # Already included by others, but explicit for clarity
-                         juce::juce_gui_basics # Already included by others, but explicit for clarity
-                         juce::juce_unittest # Make unittest module available
                          nlohmann_json::nlohmann_json
 )
 
@@ -66,4 +58,4 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CU
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
 # In Visual Studio this command provides a nice grouping of source files in "filters".
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)

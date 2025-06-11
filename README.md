@@ -1,6 +1,6 @@
 ## Project Overview
 
-Pointilistic Stochastic Textural Timbre Synthesis is LLM-speak for a granular synthesis engine that presents the user with controls to shape the geometry and composition of a point cloud of grains governed by stochastic probability with a beautiful and responsive interface that provides enough consistency and precision to build the kind of intuition required for confident live performance without hobbling the power of opening the geometry up wide and letting unbridled pseudorandomness flow.
+Pointilistic Stochastic Textural Timbre Synthesis is LLM-speak for a granular synthesis engine that presents the user with controls to shape the geometry and composition of a point cloud of grains governed by stochastic probability with a beautiful and responsive interface that provides enough consistency and precision to build the kind of intuition required for confident live performance without hobbling the power of opening the geometry up wide and letting unbridled pseudorandomness 
 
 This project aims to create a next-generation software instrument that empowers musicians, composers, and sound designers to intuitively sculpt complex, evolving sonic textures using principles of pointillism and stochastic generation. It's not just another subtractive synth; it's a tool for generating organic, non-linear soundscapes.
 
@@ -43,6 +43,47 @@ Experiment by adjusting these controls and observing the changes in the real-tim
 *   **Loading Presets:** A user-friendly browser allows you to load presets.
 *   **Factory Presets:** Explore the included factory presets to get an idea of the instrument's capabilities. Presets can be tagged and categorized (e.g., "Texture," "Rhythmic," "Melodic," "FX").
 
+
+## For the Curious & Sound Designers
+
+### The Synthesis Technique: Pointillistic Stochastic Granular Synthesis
+
+This instrument uses **granular synthesis**, where sound is constructed from tiny segments of audio called "grains." Instead of playing a continuous sound, it plays many small grains, often overlapping, to create complex textures.
+
+The "pointillistic" aspect refers to how these grains are generated and distributed, much like dots of paint in a pointillist painting. Each grain can have unique properties.
+
+The "stochastic" part means that these properties (like pitch, duration, pan, start time) are not fixed but are determined by probability distributions. You, the user, control the *shape* of these probabilities. For example, you don't set an exact pitch for all grains; you set a *central* pitch and a *dispersion* range, and the actual pitch of each grain is randomly chosen within that defined probabilistic range. This allows for the creation of sounds that feel organic, evolving, and unpredictable, yet controllable.
+
+### Visualization
+
+The central 2D visualization is key to understanding what's happening:
+
+*   **X-axis (Horizontal):** Represents the stereo position (panning) of a grain. Grains to the left are panned left, grains to the right are panned right.
+*   **Y-axis (Vertical):** Represents the pitch of a grain. Higher grains have higher pitches.
+*   **Appearance (Color, Size - *Planned*):** The visual properties of a grain (e.g., its color or size) will eventually reflect other properties like its audio source or duration, giving you an immediate visual summary of the texture's composition.
+
+By watching the visualization, you can intuitively grasp how the parameters you adjust are affecting the cloud of sound grains.
+
+### Creative Uses
+
+This synth excels at:
+
+*   **Atmospheric Pads:** Create dense, evolving soundscapes with subtle internal movement.
+*   **Complex Textures:** Generate rich, detailed sonic fabrics from any source audio.
+*   **Rhythmic Pulses:** Use the temporal distribution controls to create intricate, non-traditional rhythmic patterns.
+*   **Sound Effects:** Design unique and unusual sound effects by manipulating grain properties.
+*   **Experimental Sound Design:** Explore the boundaries of granular synthesis and stochastic processes.
+
+## Current Status & Roadmap
+
+This project is under active development. Key development phases (based on `jules_docs/sprint_master_plan.md`):
+
+*   **Core Engine & Stochastic Controls (Complete):** The fundamental sound generation and parameter logic are in place.
+*   **UI, Visualization & Preset Management (In Progress/Nearing Completion):** The main user interface, real-time visualization, and preset system are being finalized.
+*   **Modulation System (V2 - Future):** Planned features include LFOs and ADSR envelopes for animating parameters over time.
+
+See `jules_docs/sprint_master_plan.md` for more details on past and future development sprints.
+
 ## For Developers & Contributors
 
 This project is built with C++ and the JUCE framework.
@@ -61,6 +102,7 @@ This project is built with C++ and the JUCE framework.
 5.  The build process will produce the VST3, AU, and AAX plugin targets.
 
 ### Codebase Structure
+
 
 All core source code for the synthesizer, including the audio engine, UI components, and data management, is consolidated within the `plugin/` directory. The top-level `Source/` directory is no longer used for primary C++ development.
 
@@ -82,6 +124,7 @@ All core source code for the synthesizer, including the audio engine, UI compone
 *   `test/`: Unit tests for the project. Validates functionality within the `plugin/` codebase.
 
 (Note: The previous `Source/` directory and its subdirectories like `Source/Data/` and `Source/UI/` have been integrated into the `plugin/` directory structure.)
+
 
 ### Contribution Guidelines
 

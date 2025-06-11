@@ -6,24 +6,11 @@
 #include <cmath>     // For std::pow, std::cos, std::sin
 #include "Pointilsynth/Resampler.h" // For Resampler::getSample
 
-// Forward declaration of AudioEngine if not fully defined in PointilismInterfaces.h
-// Or ensure PointilismInterfaces.h has full class definition before this point.
-// Assuming PointilismInterfaces.h contains:
-// class AudioEngine {
-// public:
-//     void prepareToPlay(double sampleRate, int samplesPerBlock);
-//     // ... other members
-// private:
-//     std::vector<Grain> grains;
-//     // ... other members
-// };
-
 
 void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/)
 {
     currentSampleRate = sampleRate;
     oscillator_.setSampleRate(sampleRate);
-    // stochasticModel.sampleRate_.store(sampleRate); // This was incorrect: sampleRate_ is private. setSampleRate below handles it.
     stochasticModel.setSampleRate(sampleRate); // Inform StochasticModel
     samplesUntilNextGrain = stochasticModel.getSamplesUntilNextEvent();
     grains.reserve(1024); // Keep existing functionality
@@ -95,12 +82,8 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffe
             // A. Fetch source sample based on grain's source type
             if (currentSourceType_.load() == GrainSourceType::Oscillator)
             {
-                // grain.pitch is float. If it represents an integer MIDI note, round and cast to int.
-                // This addresses a -Wfloat-conversion warning.
-                int midiNoteInt = static_cast<int>(std::round(grain.pitch));
-                // Result of getMidiNoteInHertz is double. Oscillator::setFrequency expects float.
-                double freqDouble = juce::MidiMessage::getMidiNoteInHertz(midiNoteInt);
-                oscillator_.setFrequency(static_cast<float>(freqDouble)); // Tune the shared oscillator
+                double frequency = juce::MidiMessage::getMidiNoteInHertz(static_cast<int>(std::round(grain.pitch)));
+                oscillator_.setFrequency(static_cast<float>(frequency)); // Tune the shared oscillator
                 sourceSample = oscillator_.getNextSample(); // Process and advance oscillator
             }
             else if (currentSourceType_.load() == GrainSourceType::AudioSample)
