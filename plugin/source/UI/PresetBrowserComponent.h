@@ -1,6 +1,6 @@
 #pragma once
 
-#include <juce::juce_ui_basics.h>
+#include <juce::juce_gui_basics.h>
 #include <juce::juce_core.h>
 
 // Forward declaration
