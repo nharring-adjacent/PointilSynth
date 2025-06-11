@@ -52,7 +52,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
-target_link_libraries_system(${PROJECT_NAME} PRIVATE juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core juce::juce_dsp juce::juce_gui_basics)
+target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core juce::juce_dsp juce::juce_gui_basics)
   
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
