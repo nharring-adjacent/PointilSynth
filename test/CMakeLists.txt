@@ -13,9 +13,7 @@ set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJEC
 
 juce_add_console_app(${PROJECT_NAME}
     SOURCES 
-        source/AudioProcessorTest.cpp
-        source/PresetManagerTest.cpp
-        source/TestMain.cpp
+	${TEST_SOURCE_FILES}
     MODULES
         juce_core
         juce_events
@@ -28,12 +26,13 @@ juce_add_console_app(${PROJECT_NAME}
 
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
-                         juce::juce_recommended_warning_flags juce::juce_audio_processors nlohmann_json::nlohmann_json
+                         juce::juce_recommended_warning_flags juce::juce_audio_processors nlohmann_json::nlohmann_json PointilisticSynth
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
     "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/source"
 )
 target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 
