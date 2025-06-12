@@ -46,8 +46,7 @@ PresetBrowserComponent::PresetBrowserComponent(PresetManager& pm)
 
     // Initial scan and population
     scanPresetDirectory(); // this populates presetFiles initially
-    // No need to call filterPresetsByCategory() here as "All" is selected by default
-    // and scanPresetDirectory already provides all files.
+    filterPresetsByCategory(); // Ensure correct category is applied on init
     presetListBox.updateContent();
 }
 
