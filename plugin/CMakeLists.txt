@@ -5,7 +5,7 @@ project(PointillisticSynth VERSION 0.1.0)
 
 # Adding a directory with the library/application name as a subfolder of the
 # include folder is a good practice. It helps avoid name clashes later on.
-set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/PointilSynth")
 
 # Adds a plugin target (that's basically what the Projucer does).
 juce_add_plugin(
@@ -41,7 +41,7 @@ set(SOURCE_FILES
     source/Data/PresetManager.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
-set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h source/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h ${INCLUDE_DIR}/UI/PodComponent.h)
+set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h ${INCLUDE_DIR}/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.

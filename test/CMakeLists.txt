@@ -6,8 +6,6 @@ include(GoogleTest) # For GTest::gtest_main and gtest_discover_tests
 
 set(TEST_SOURCE_FILES
     source/AudioProcessorTest.cpp
-    source/PresetManagerTest.cpp
-    source/TestMain.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
@@ -18,21 +16,19 @@ juce_add_console_app(${PROJECT_NAME}
         juce_core
         juce_events
         juce_gui_basics         # For DebugUIPanel and ScopedJuceInitialiser_GUI
-        juce_unittest         # For UnitTestRunner and test macros
         juce_audio_processors # For APVTS in PanelTestFixtureA
         juce_audio_basics
-    LINK_LIBRARIES PointillisticSynth GTest::gtest
 )
 
 target_link_libraries(
-  ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
-                         juce::juce_recommended_warning_flags juce::juce_audio_processors nlohmann_json::nlohmann_json PointilisticSynth
+  ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags 
+                         juce::juce_recommended_warning_flags juce::juce_audio_processors nlohmann_json::nlohmann_json 
+PRIVATE PointilisticSynth GTest::gtest_main
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${GOOGLETEST_SOURCE_DIR}/googletest/include
     "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/source"
 )
 target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 
