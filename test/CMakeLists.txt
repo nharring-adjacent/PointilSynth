@@ -13,7 +13,6 @@ set(TEST_SOURCE_FILES
     source/PointilismInterfacesTest.cpp
     source/PresetManagerTest.cpp
     source/ResamplerTest.cpp
-    source/UI/PodComponentTest.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 

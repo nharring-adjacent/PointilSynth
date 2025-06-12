@@ -47,7 +47,6 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/PointilismInterfaces.h
     ${INCLUDE_DIR}/PresetManager.h
     ${INCLUDE_DIR}/Resampler.h
-    ${INCLUDE_DIR}/UI/PodComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
