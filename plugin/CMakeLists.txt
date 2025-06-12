@@ -5,7 +5,7 @@ project(PointillisticSynth VERSION 0.1.0)
 
 # Adding a directory with the library/application name as a subfolder of the
 # include folder is a good practice. It helps avoid name clashes later on.
-set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/PointilSynth/")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth/")
 
 # Adds a plugin target (that's basically what the Projucer does).
 juce_add_plugin(
@@ -13,7 +13,7 @@ juce_add_plugin(
   COMPANY_NAME
   "HHI" # 
   IS_SYNTH
-  FALSE # may change this
+  TRUE # may change this
   NEEDS_MIDI_INPUT
   FALSE # may change this
   NEEDS_MIDI_OUTPUT
@@ -23,12 +23,9 @@ juce_add_plugin(
   PLUGIN_CODE
   Pntl # 
   FORMATS
-  Standalone
-  VST3 # 
+  Standalone VST3 AU AAX #
   PRODUCT_NAME
   "PointillisticSynth" 
-  LINK_LIBRARIES
-  GTest::gtest
 )
 
 # Sets the source files of the plugin project.
@@ -38,10 +35,20 @@ set(SOURCE_FILES
     source/PluginEditor.cpp
     source/DebugUIPanel.cpp
     source/StochasticModel.cpp
-    source/Data/PresetManager.cpp
+    source/PresetManager.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
-set(HEADER_FILES ${INCLUDE_DIR}/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h)
+set(HEADER_FILES
+    ${INCLUDE_DIR}/DebugUIPanel.h
+    ${INCLUDE_DIR}/GrainEnvelope.h
+    ${INCLUDE_DIR}/Oscillator.h
+    ${INCLUDE_DIR}/PluginEditor.h
+    ${INCLUDE_DIR}/PluginProcessor.h
+    ${INCLUDE_DIR}/PointilismInterfaces.h
+    ${INCLUDE_DIR}/PresetManager.h
+    ${INCLUDE_DIR}/Resampler.h
+    ${INCLUDE_DIR}/UI/PodComponent.h
+)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
@@ -54,7 +61,6 @@ target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce:
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
                          juce::juce_recommended_warning_flags
-                         nlohmann_json::nlohmann_json
 )
 
 # These definitions are recommended by JUCE.
@@ -65,4 +71,4 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CU
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
 # In Visual Studio this command provides a nice grouping of source files in "filters".
-#source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)

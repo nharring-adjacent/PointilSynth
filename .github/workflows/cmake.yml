@@ -13,10 +13,15 @@ jobs:
       matrix:
 #        os: [macos-14, windows-latest, ubuntu-latest]
         os: [ubuntu-latest]
-        build_type: [Debug]
+        build_type: [Debug, Release]
         include:
           - os: ubuntu-latest
             name: Build ubuntu-latest Debug (Ninja)
+            build_type: Debug # Explicitly state build_type for clarity
+            cmake_generator_flags: -G Ninja
+          - os: ubuntu-latest
+            name: Build ubuntu-latest Release (Ninja)
+            build_type: Release # Explicitly state build_type for clarity
             cmake_generator_flags: -G Ninja
 #          - os: macos-14
 #            name: Build macos-14 Debug (Xcode)
@@ -41,7 +46,7 @@ jobs:
       id: cache-libs
       uses: actions/cache@v4
       with:
-        path: ${{github.workspace}}/.github/cache-placeholder
+        path: ${{github.workspace}}/libs
         key: libs-${{ matrix.os }}
 
     - name: Install Linux dependencies
