@@ -5,7 +5,15 @@ enable_testing()
 include(GoogleTest) # For GTest::gtest_main and gtest_discover_tests
 
 set(TEST_SOURCE_FILES
-    source/AudioProcessorTest.cpp
+    source/DebugUIPanelTest.cpp
+    source/GrainEnvelopeTest.cpp
+    source/OscillatorTest.cpp
+    source/PluginEditorTest.cpp
+    source/PluginProcessorTest.cpp
+    source/PointilismInterfacesTest.cpp
+    source/PresetManagerTest.cpp
+    source/ResamplerTest.cpp
+    source/UI/PodComponentTest.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
