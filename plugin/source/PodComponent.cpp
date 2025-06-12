@@ -1,5 +1,5 @@
 #include "PodComponent.h"
-include <cmath> // For std::abs
+#include <cmath> // For std::abs
 #include <limits> // For std::numeric_limits
 
 PodComponent::PodComponent() : value(0.0f), lastMouseY(0.0f)

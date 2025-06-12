@@ -1,4 +1,4 @@
-#include "PresetBrowserComponent.h"
+#include "UI/PresetBrowserComponent.h"
 #include "../PresetManager.h" // Assuming PresetManager.h is in the parent directory (Source/)
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "Data/PresetManager.h"
