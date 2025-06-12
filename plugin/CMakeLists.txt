@@ -41,7 +41,7 @@ set(SOURCE_FILES
     source/Data/PresetManager.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
-set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h ${INCLUDE_DIR}/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h)
+set(HEADER_FILES ${INCLUDE_DIR}/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
