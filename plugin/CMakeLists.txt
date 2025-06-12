@@ -39,9 +39,6 @@ set(SOURCE_FILES
     source/DebugUIPanel.cpp
     source/StochasticModel.cpp
     source/Data/PresetManager.cpp
-    source/UI/PresetBrowserComponent.cpp
-    source/UI/VisualizationComponent.cpp
-    source/PodComponent.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
 set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h source/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h ${INCLUDE_DIR}/UI/PodComponent.h)
