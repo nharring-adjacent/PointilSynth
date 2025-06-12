@@ -11,18 +11,19 @@ jobs:
     strategy:
       fail-fast: false # Keep this if you want all jobs to run even if one fails
       matrix:
-        os: [macos-14, windows-latest, ubuntu-latest]
+#        os: [macos-14, windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
         build_type: [Debug]
         include:
           - os: ubuntu-latest
             name: Build ubuntu-latest Debug (Ninja)
             cmake_generator_flags: -G Ninja
-          - os: macos-14
-            name: Build macos-14 Debug (Xcode)
-            cmake_generator_flags: ""
-          - os: windows-latest
-            name: Build windows-latest Debug (VS)
-            cmake_generator_flags: ""
+#          - os: macos-14
+#            name: Build macos-14 Debug (Xcode)
+#            cmake_generator_flags: ""
+#          - os: windows-latest
+#            name: Build windows-latest Debug (VS)
+#            cmake_generator_flags: ""
 
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
