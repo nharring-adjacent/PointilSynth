@@ -1,4 +1,6 @@
 #include "PodComponent.h"
+#include <cmath> // For std::abs
+#include <limits> // For std::numeric_limits
 
 PodComponent::PodComponent() : value(0.0f), lastMouseY(0.0f)
 {
@@ -18,8 +20,7 @@ void PodComponent::setName(const juce::String& newName)
 
 void PodComponent::setValue(float newValue, juce::NotificationType notification)
 {
-    if (value != newValue)
-    {
+    if (std::abs(value - newValue) > std::numeric_limits<float>::epsilon()) {
         value = newValue;
         repaint(); // Repaint to reflect the new value
 
@@ -39,11 +40,11 @@ void PodComponent::paint(juce::Graphics& g)
     g.setColour(juce::Colours::white);
 
     // Draw the name of the pod
-    g.setFont(juce::Font(16.0f));
+    g.setFont(juce::FontOptions(16.0f));
     g.drawText(name, getLocalBounds().reduced(10, 0), juce::Justification::centredTop, true);
 
     // Draw the value of the pod
-    g.setFont(juce::Font(24.0f, juce::Font::bold));
+    g.setFont(juce::FontOptions(24.0f).withStyle(juce::Font::bold));
     juce::String valueText = juce::String(value, 2); // Format value to 2 decimal places
     g.drawText(valueText, getLocalBounds().reduced(0, 10), juce::Justification::centredBottom, true);
 

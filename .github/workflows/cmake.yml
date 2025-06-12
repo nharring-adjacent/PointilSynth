@@ -40,8 +40,8 @@ jobs:
       id: cache-libs
       uses: actions/cache@v4
       with:
-        path: ${{github.workspace}}
-        key: libs
+        path: ${{github.workspace}}/.github/cache-placeholder
+        key: libs-${{ matrix.os }}
 
     - name: Install Linux dependencies
       if: matrix.os == 'ubuntu-latest'

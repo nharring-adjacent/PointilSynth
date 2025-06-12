@@ -8,12 +8,13 @@ class PodComponent : public juce::Component {
 public:
     PodComponent() {}
     ~PodComponent() override {}
+    void setName(const juce::String& newName) override;
 
     void paint(juce::Graphics& g) override {
         // Placeholder: fill with a color to see it
         g.fillAll(juce::Colours::blue.withAlpha(0.5f));
         g.setColour(juce::Colours::white);
-        g.drawRect(getLocalBounds(), 1.f);
+        g.drawRect(getLocalBounds(), static_cast<int>(1.f));
         g.drawText("Pod", getLocalBounds(), juce::Justification::centred, false);
     }
 
