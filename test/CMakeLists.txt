@@ -28,7 +28,7 @@ juce_add_console_app(${PROJECT_NAME}
 
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
-                         juce::juce_recommended_warning_flags juce::juce_audio_processors 
+                         juce::juce_recommended_warning_flags juce::juce_audio_processors nlohmann_json::nlohmann_json
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE

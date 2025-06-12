@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "Data/PresetManager.h" // Adjusted path
-#include "plugin/source/PointilismInterfaces.h" // For StochasticModel
+#include "source/PointilismInterfaces.h" // For StochasticModel
 #include <juce_core/juce_core.h>
 #include "nlohmann/json.hpp"
 
