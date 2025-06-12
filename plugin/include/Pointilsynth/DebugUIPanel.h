@@ -51,4 +51,7 @@ private:
     void temporalDistributionChanged();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DebugUIPanel)
+
+    // Friend declaration for test fixture
+    friend class DebugUIPanelTestFixture;
 };
