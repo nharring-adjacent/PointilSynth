@@ -1,7 +1,7 @@
 #pragma once
 
 #include <juce_core/juce_core.h> // For juce::File
-#include "nlohmann/json.hpp"     // For nlohmann::json
+#include <nlohmann/json.hpp>     // For nlohmann::json
 #include "../../source/PointilismInterfaces.h" // For StochasticModel
 
 // Forward declaration in case StochasticModel is in a namespace
