@@ -2,7 +2,7 @@
 
 #include <juce_core/juce_core.h> // For juce::File
 #include "nlohmann/json.hpp"     // For nlohmann::json
-#include "../../plugin/source/PointilismInterfaces.h" // For StochasticModel
+#include "../../source/PointilismInterfaces.h" // For StochasticModel
 
 // Forward declaration in case StochasticModel is in a namespace
 // class StochasticModel; // Not strictly necessary if PointilismInterfaces.h is included correctly
