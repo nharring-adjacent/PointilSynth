@@ -7,10 +7,6 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
     audio_plugin::AudioPluginAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), processorRef(p), debugUIPanel(processorRef.getStochasticModel()) {
     // Add and make visible the PodComponents
-    addAndMakeVisible(pitchPod);
-    addAndMakeVisible(densityPod);
-    addAndMakeVisible(durationPod);
-    addAndMakeVisible(panPod);
 
     // Set the size of the editor window.
     setSize(600, 400); // Example size, can be adjusted
@@ -40,13 +36,7 @@ void PointillisticSynthAudioProcessorEditor::resized() {
     bounds.removeFromTop(getHeight() * 2 / 3);
 
     // Bottom third for the pods
-    auto podArea = bounds;
-    int podWidth = podArea.getWidth() / 4;
 
-    pitchPod.setBounds(podArea.removeFromLeft(podWidth));
-    densityPod.setBounds(podArea.removeFromLeft(podWidth));
-    durationPod.setBounds(podArea.removeFromLeft(podWidth));
-    panPod.setBounds(podArea.removeFromLeft(podWidth));
 
 }
 

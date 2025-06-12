@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 5,
   "cmakeMinimumRequired": {
     "major": 3,
     "minor": 22,
@@ -33,15 +33,6 @@
       "generator": "Xcode",
       "binaryDir": "xcode-build"
     },
-    {
-      "name": "linux-container",
-      "generator": "Unix Makefiles",
-      "binaryDir": "linux-container-build",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-       }
-    }
   ],
   "buildPresets": [
     {

@@ -1,9 +1,8 @@
 #pragma once
 
 
-#include "Pointilsynth/PluginProcessor.h" // Adjusted path
-#include "UI/PodComponent.h"
-#include "../../source/DebugUIPanel.h"       // Added for DebugUIPanel
+#include "PluginProcessor.h" // Adjusted path
+#include "DebugUIPanel.h"       // Added for DebugUIPanel
 // PointilismInterfaces.h is included by PluginProcessor.h, which is included above.
 // If direct use of StochasticModel type was needed here, an include would be good:
 // #include "../../source/PointilismInterfaces.h"
@@ -23,10 +22,6 @@ private:
     // access the processor object that created it.
     audio_plugin::AudioPluginAudioProcessor& processorRef;
 
-    PodComponent pitchPod;
-    PodComponent densityPod;
-    PodComponent durationPod;
-    PodComponent panPod;
     DebugUIPanel debugUIPanel; // Added DebugUIPanel member
   
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PointillisticSynthAudioProcessorEditor)

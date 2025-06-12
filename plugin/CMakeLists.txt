@@ -5,7 +5,7 @@ project(PointillisticSynth VERSION 0.1.0)
 
 # Adding a directory with the library/application name as a subfolder of the
 # include folder is a good practice. It helps avoid name clashes later on.
-set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth")
+set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/PointilSynth/")
 
 # Adds a plugin target (that's basically what the Projucer does).
 juce_add_plugin(
@@ -39,12 +39,9 @@ set(SOURCE_FILES
     source/DebugUIPanel.cpp
     source/StochasticModel.cpp
     source/Data/PresetManager.cpp
-    source/UI/PresetBrowserComponent.cpp
-    source/UI/VisualizationComponent.cpp
-    source/PodComponent.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
-set(HEADER_FILES ${INCLUDE_DIR}/PluginProcessor.h source/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h ${INCLUDE_DIR}/UI/PodComponent.h)
+set(HEADER_FILES ${INCLUDE_DIR}/PointilismInterfaces.h ${INCLUDE_DIR}/PluginEditor.h)
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
@@ -52,7 +49,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/in
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
-target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core juce::juce_dsp juce::juce_gui_basics)
+target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core juce::juce_dsp juce::juce_gui_basics nlohmann_json::nlohmann_json)
   
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
