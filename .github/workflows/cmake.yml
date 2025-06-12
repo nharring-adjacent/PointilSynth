@@ -9,34 +9,28 @@ on:
 jobs:
   build:
     strategy:
-      fail-fast: false # Keep this if you want all jobs to run even if one fails
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        build_type: [Debug]
+        build_type: [Debug] # Kept original Debug, can be expanded later
         include:
-          - os: ubuntu-latest
-            name: Build ubuntu-latest Debug (Ninja)
-            build_type: Debug # Explicitly state build_type for clarity
+          - build_type: Debug
+            name: Build Debug (Ninja) # Simplified name
             cmake_generator_flags: -G Ninja
 
     name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest # Job runs on an ubuntu-latest host
+
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/pointilism/pointilsynth-build-env:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Cache dependencies
-      id: cache-libs
-      uses: actions/cache@v4
-      with:
-        path: ${{github.workspace}}/libs
-        key: libs-${{ matrix.os }}
-
-    - name: Install Linux dependencies
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libfreetype6-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libasound2-dev libwebkit2gtk-4.1-dev libgtk-3-dev
+    # Cache dependencies and Install Linux dependencies steps are removed
+    # as they are now part of the Docker image.
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -52,4 +46,3 @@ jobs:
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{ matrix.build_type }} --output-on-failure
-
