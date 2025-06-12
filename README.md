@@ -144,7 +144,7 @@ The project includes a suite of unit tests. After building the project, you can 
 
 ```bash
 # Example: navigate to build directory and run tests
-cd build/test/
+cd build/test/PointilSynthTests_artefacts/Debug/
 ./PointilSynth_Test # Or PointilSynth_Test.exe on Windows
 ```
 
