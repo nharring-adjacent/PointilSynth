@@ -32,6 +32,15 @@
       "name": "Xcode",
       "generator": "Xcode",
       "binaryDir": "xcode-build"
+    },
+    {
+      "name": "linux-container",
+      "generator": "Unix Makefiles",
+      "binaryDir": "linux-container-build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
     }
   ],
   "buildPresets": [
@@ -50,6 +59,10 @@
     {
       "name": "Xcode",
       "configurePreset": "Xcode"
+    },
+    {
+      "name": "linux-container",
+      "configurePreset": "linux-container"
     }
   ],
   "testPresets": [
@@ -77,6 +90,15 @@
       "inherits": "default",
       "configurePreset": "Xcode",
       "configuration": "Debug"
+    },
+    {
+      "name": "linux-container",
+      "configurePreset": "linux-container",
+      "output": { "outputOnFailure": true },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": false
+      }
     }
   ]
 }
