@@ -144,49 +144,54 @@ The project includes a suite of unit tests. After building the project, you can 
 
 ```bash
 # Example: navigate to build directory and run tests
-cd build/test/
+cd build/test/PointilSynthTests_artefacts/Debug/
 ./PointilSynth_Test # Or PointilSynth_Test.exe on Windows
 ```
 
-## For the Curious & Sound Designers
+## Dockerized Build Environment
 
-### The Synthesis Technique: Pointillistic Stochastic Granular Synthesis
+### Overview
+This project uses a Dockerized environment to ensure consistent builds and manage all necessary dependencies. The configuration for this environment is defined in the `Dockerfile` located in the root of the repository, which uses a multi-stage build approach.
 
-This instrument uses **granular synthesis**, where sound is constructed from tiny segments of audio called "grains." Instead of playing a continuous sound, it plays many small grains, often overlapping, to create complex textures.
+### Using Docker for Local Development
 
-The "pointillistic" aspect refers to how these grains are generated and distributed, much like dots of paint in a pointillist painting. Each grain can have unique properties.
+You can use Docker to create a local development environment with all dependencies pre-installed.
 
-The "stochastic" part means that these properties (like pitch, duration, pan, start time) are not fixed but are determined by probability distributions. You, the user, control the *shape* of these probabilities. For example, you don't set an exact pitch for all grains; you set a *central* pitch and a *dispersion* range, and the actual pitch of each grain is randomly chosen within that defined probabilistic range. This allows for the creation of sounds that feel organic, evolving, and unpredictable, yet controllable.
+**Build the `builder` stage for development and testing:**
+This command builds the `builder` stage from the Dockerfile, which includes source code, configures CMake, and builds the project. This is useful if you want to replicate the CI build or run all tests as defined in the Dockerfile.
+```bash
+docker build --target builder -t pointilsynth-builder .
+```
 
-### Visualization
+**Interactive Shell with Dependencies (`base` image):**
+For a more interactive development workflow, you can build the `base` image (which only contains dependencies) and then run a container with your local source code mounted.
 
-The central 2D visualization is key to understanding what's happening:
+1.  Build the `base` image (if you haven't already or want the latest version):
+    ```bash
+    docker build --target base -t pointilsynth-build-env .
+    ```
+2.  Run an interactive shell, mounting your current project directory into the container:
+    ```bash
+    docker run -it --rm -v "$(pwd):/app" -w /app pointilsynth-build-env bash
+    ```
+    Inside this shell, you'll have all dependencies available (clang, cmake, ninja, etc.) and can run CMake configuration, build steps, or tests manually.
 
-*   **X-axis (Horizontal):** Represents the stereo position (panning) of a grain. Grains to the left are panned left, grains to the right are panned right.
-*   **Y-axis (Vertical):** Represents the pitch of a grain. Higher grains have higher pitches.
-*   **Appearance (Color, Size - *Planned*):** The visual properties of a grain (e.g., its color or size) will eventually reflect other properties like its audio source or duration, giving you an immediate visual summary of the texture's composition.
+### Build Environment Image (`base` stage)
+The `base` stage of the `Dockerfile` is specifically designed to create a build environment image. This image contains all the compilers, libraries, and tools needed to build the project.
 
-By watching the visualization, you can intuitively grasp how the parameters you adjust are affecting the cloud of sound grains.
+This image is published to the GitHub Container Registry (GHCR) at:
+`ghcr.io/YOUR_GITHUB_USERNAME_OR_ORG/pointilism/pointilsynth-build-env:latest`
 
-### Creative Uses
+This is the exact image used by our GitHub Actions Continuous Integration (CI) workflow (`.github/workflows/cmake.yml`) to build and test the project, ensuring consistency between local and CI environments.
 
-This synth excels at:
+### Updating the `base` Image in GitHub Container Registry
+The `base` build environment image is automatically rebuilt and published to GHCR by the `.github/workflows/publish-docker-image.yml` workflow.
 
-*   **Atmospheric Pads:** Create dense, evolving soundscapes with subtle internal movement.
-*   **Complex Textures:** Generate rich, detailed sonic fabrics from any source audio.
-*   **Rhythmic Pulses:** Use the temporal distribution controls to create intricate, non-traditional rhythmic patterns.
-*   **Sound Effects:** Design unique and unusual sound effects by manipulating grain properties.
-*   **Experimental Sound Design:** Explore the boundaries of granular synthesis and stochastic processes.
+This process is triggered automatically on pushes to the `main` branch if any of the following files are modified:
+*   `Dockerfile`
+*   Any file within the `.github/workflows/` directory (e.g., changes to the publishing workflow itself).
 
-## Current Status & Roadmap
-
-This project is under active development. Key development phases (based on `jules_docs/sprint_master_plan.md`):
-
-*   **Core Engine & Stochastic Controls (Complete):** The fundamental sound generation and parameter logic are in place.
-*   **UI, Visualization & Preset Management (In Progress/Nearing Completion):** The main user interface, real-time visualization, and preset system are being finalized.
-*   **Modulation System (V2 - Future):** Planned features include LFOs and ADSR envelopes for animating parameters over time.
-
-See `jules_docs/sprint_master_plan.md` for more details on past and future development sprints.
+The workflow can also be triggered manually from the "Actions" tab in the GitHub repository if an immediate rebuild and publish are needed.
 
 ## License
 

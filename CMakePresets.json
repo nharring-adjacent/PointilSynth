@@ -32,7 +32,7 @@
       "name": "Xcode",
       "generator": "Xcode",
       "binaryDir": "xcode-build"
-    },
+    }
   ],
   "buildPresets": [
     {
