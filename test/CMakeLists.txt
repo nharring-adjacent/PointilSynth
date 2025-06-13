@@ -5,7 +5,15 @@ enable_testing()
 include(GoogleTest) # For GTest::gtest_main and gtest_discover_tests
 
 set(TEST_SOURCE_FILES
-    source/AudioProcessorTest.cpp
+    source/DebugUIPanelTest.cpp
+    source/GrainEnvelopeTest.cpp
+    source/OscillatorTest.cpp
+    source/PluginEditorTest.cpp
+    source/PluginProcessorTest.cpp
+    source/PointilismInterfacesTest.cpp
+    source/PresetManagerTest.cpp
+    source/ResamplerTest.cpp
+    source/UI/PodComponentTest.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
@@ -22,7 +30,7 @@ juce_add_console_app(${PROJECT_NAME}
 
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags 
-                         juce::juce_recommended_warning_flags juce::juce_audio_processors nlohmann_json::nlohmann_json 
+                         juce::juce_audio_processors nlohmann_json::nlohmann_json
 PRIVATE PointillisticSynth GTest::gtest_main
 )
 
