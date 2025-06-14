@@ -92,14 +92,20 @@ This project is built with C++ and the JUCE framework.
 
 1.  Clone the repository.
 2.  Ensure you have a C++ compiler and CMake installed.
-3.  Ensure you have the JUCE framework installed and correctly set up in your development environment. The project uses JUCE to handle plugin formats, audio/MIDI I/O, and basic windowing.
-4.  Use CMake to generate project files for your IDE (e.g., Xcode, Visual Studio) or build system.
+3.  Install the required build dependencies for JUCE (Ubuntu/Debian example):
+    ```bash
+    sudo apt-get install -y libxrandr-dev libxinerama-dev libxext-dev \
+        libx11-dev libgtk-3-dev libwebkit2gtk-4.1-dev libasound2-dev \
+        libglu1-mesa-dev mesa-common-dev
+    ```
+4.  Ensure you have the JUCE framework installed and correctly set up in your development environment. The project uses JUCE to handle plugin formats, audio/MIDI I/O, and basic windowing.
+5.  Use CMake to generate project files for your IDE (e.g., Xcode, Visual Studio) or build system.
     ```bash
     # Example CMake configuration and build
     cmake -B build -S .
     cmake --build build
     ```
-5.  The build process will produce the VST3, AU, and AAX plugin targets.
+6.  The build process will produce the VST3, AU, and AAX plugin targets.
 
 ### Codebase Structure
 
