@@ -2,6 +2,9 @@
 #
 # https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
 
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+
 set(MSVC_WARNINGS
     /W4 # Baseline reasonable warnings
     /w14242 # 'identifier': conversion from 'type1' to 'type2', possible loss of data
@@ -92,16 +95,42 @@ list(APPEND CLANG_WARNINGS -Werror)
 list(APPEND GCC_WARNINGS -Werror)
 list(APPEND MSVC_WARNINGS /WX)
 
+
+function(filter_supported_cxx_warnings out_var)
+  set(result "")
+  foreach(flag IN LISTS ARGN)
+    string(REGEX REPLACE "[^A-Za-z0-9]" "_" flag_var "${flag}")
+    check_cxx_compiler_flag("${flag}" HAS_${flag_var})
+    if(HAS_${flag_var})
+      list(APPEND result "${flag}")
+    endif()
+  endforeach()
+  set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()
+
+function(filter_supported_c_warnings out_var)
+  set(result "")
+  foreach(flag IN LISTS ARGN)
+    string(REGEX REPLACE "[^A-Za-z0-9]" "_" flag_var "${flag}")
+    check_c_compiler_flag("${flag}" HAS_${flag_var})
+    if(HAS_${flag_var})
+      list(APPEND result "${flag}")
+    endif()
+  endforeach()
+  set(${out_var} "${result}" PARENT_SCOPE)
+endfunction()
+
 if(MSVC)
-  set(PROJECT_WARNINGS_CXX ${MSVC_WARNINGS})
+  set(selected_warnings ${MSVC_WARNINGS})
 elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-  set(PROJECT_WARNINGS_CXX ${CLANG_WARNINGS})
+  set(selected_warnings ${CLANG_WARNINGS})
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  set(PROJECT_WARNINGS_CXX ${GCC_WARNINGS})
+  set(selected_warnings ${GCC_WARNINGS})
 else()
   message(AUTHOR_WARNING "No compiler warnings set for CXX compiler: '${CMAKE_CXX_COMPILER_ID}'")
-  # TODO support Intel compiler
+  set(selected_warnings "")
 endif()
 
-# use the same warning flags for C
-set(PROJECT_WARNINGS_C "${PROJECT_WARNINGS_CXX}")
+filter_supported_cxx_warnings(PROJECT_WARNINGS_CXX ${selected_warnings})
+filter_supported_c_warnings(PROJECT_WARNINGS_C ${selected_warnings})
+

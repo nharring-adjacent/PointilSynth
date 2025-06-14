@@ -59,8 +59,8 @@ target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce:
   
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
-                         juce::juce_recommended_warning_flags
 )
+#                         juce::juce_recommended_warning_flags
 
 # These definitions are recommended by JUCE.
 target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0)
