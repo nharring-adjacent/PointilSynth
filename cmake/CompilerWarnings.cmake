@@ -6,7 +6,6 @@
 #
 # https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
 
-  if("${MSVC_WARNINGS}" STREQUAL "")
     set(MSVC_WARNINGS
         /W4 # Baseline reasonable warnings
         /w14242 # 'identifier': conversion from 'type1' to 'type2', possible loss of data
@@ -32,9 +31,7 @@
         /w14928 # illegal copy-initialization; more than one user-defined conversion has been implicitly applied
         /permissive- # standards conformance mode for MSVC compiler.
     )
-  endif()
 
-  if("${CLANG_WARNINGS}" STREQUAL "")
     set(CLANG_WARNINGS
         -Wall
         -Wextra # reasonable and standard
@@ -53,9 +50,7 @@
         -Wformat=2 # warn on security issues around functions that format output (ie printf)
         -Wimplicit-fallthrough # warn on statements that fallthrough without an explicit annotation
     )
-  endif()
 
-  if("${GCC_WARNINGS}" STREQUAL "")
     set(GCC_WARNINGS
         ${CLANG_WARNINGS}
         -Wmisleading-indentation # warn if indentation implies blocks where blocks do not exist
@@ -65,25 +60,6 @@
         -Wuseless-cast # warn if you perform a cast to the same type
         -Wsuggest-override # warn if an overridden member function is not marked 'override' or 'final'
     )
-  endif()
-
-  if("${CUDA_WARNINGS}" STREQUAL "")
-    set(CUDA_WARNINGS
-        -Wall
-        -Wextra
-        -Wunused
-        -Wconversion
-        -Wshadow
-        # TODO add more Cuda warnings
-    )
-  endif()
-
-  if(WARNINGS_AS_ERRORS)
-    message(TRACE "Warnings are treated as errors")
-    list(APPEND CLANG_WARNINGS -Werror)
-    list(APPEND GCC_WARNINGS -Werror)
-    list(APPEND MSVC_WARNINGS /WX)
-  endif()
 
 
 if(MSVC)
