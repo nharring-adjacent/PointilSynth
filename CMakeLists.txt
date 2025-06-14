@@ -62,6 +62,7 @@ cpmaddpackage(
 
 # Add compiler warning utilities
 include(cmake/CompilerWarnings.cmake)
+filter_target_compile_options(juce_recommended_warning_flags)
 include(cmake/Util.cmake)
 
 # Adds all the targets configured in the "plugin" folder.
