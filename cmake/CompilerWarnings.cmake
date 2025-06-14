@@ -3,6 +3,7 @@
 # https://github.com/lefticus/cppbestpractices/blob/master/02-Use_the_Tools_Available.md
 
 include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
 
 set(MSVC_WARNINGS
     /W4 # Baseline reasonable warnings
@@ -95,30 +96,28 @@ list(APPEND GCC_WARNINGS -Werror)
 list(APPEND MSVC_WARNINGS /WX)
 
 
-function(filter_supported_warnings out_var)
+function(filter_supported_cxx_warnings out_var)
   set(result "")
   foreach(flag IN LISTS ARGN)
-    if(flag MATCHES "^\$<")
+    string(REGEX REPLACE "[^A-Za-z0-9]" "_" flag_var "${flag}")
+    check_cxx_compiler_flag("${flag}" HAS_${flag_var})
+    if(HAS_${flag_var})
       list(APPEND result "${flag}")
-    else()
-      string(REGEX REPLACE "[^A-Za-z0-9]" "_" flag_var "${flag}")
-      check_cxx_compiler_flag("${flag}" HAS_${flag_var})
-      if(HAS_${flag_var})
-        list(APPEND result "${flag}")
-      endif()
     endif()
   endforeach()
   set(${out_var} "${result}" PARENT_SCOPE)
 endfunction()
 
-function(filter_target_compile_options target)
-  if(TARGET ${target})
-    get_target_property(_opts ${target} INTERFACE_COMPILE_OPTIONS)
-    if(_opts)
-      filter_supported_warnings(_filtered "${_opts}")
-      set_target_properties(${target} PROPERTIES INTERFACE_COMPILE_OPTIONS "${_filtered}")
+function(filter_supported_c_warnings out_var)
+  set(result "")
+  foreach(flag IN LISTS ARGN)
+    string(REGEX REPLACE "[^A-Za-z0-9]" "_" flag_var "${flag}")
+    check_c_compiler_flag("${flag}" HAS_${flag_var})
+    if(HAS_${flag_var})
+      list(APPEND result "${flag}")
     endif()
-  endif()
+  endforeach()
+  set(${out_var} "${result}" PARENT_SCOPE)
 endfunction()
 
 if(MSVC)
@@ -132,7 +131,6 @@ else()
   set(selected_warnings "")
 endif()
 
-filter_supported_warnings(PROJECT_WARNINGS_CXX ${selected_warnings})
+filter_supported_cxx_warnings(PROJECT_WARNINGS_CXX ${selected_warnings})
+filter_supported_c_warnings(PROJECT_WARNINGS_C ${selected_warnings})
 
-# use the same warning flags for C
-set(PROJECT_WARNINGS_C "${PROJECT_WARNINGS_CXX}")
