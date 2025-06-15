@@ -1,3 +1,4 @@
+#include "Pointilsynth/ProjectInfo.h"
 #include "Pointilsynth/PluginProcessor.h"
 #include "Pointilsynth/PluginEditor.h"
 
@@ -17,7 +18,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {}
 
 const juce::String AudioPluginAudioProcessor::getName() const {
-  return JucePlugin_Name;
+  return ProjectInfo::projectName;
 }
 
 bool AudioPluginAudioProcessor::acceptsMidi() const {
