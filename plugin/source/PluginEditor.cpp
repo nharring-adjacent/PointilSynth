@@ -17,6 +17,7 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
 }
 
 PointillisticSynthAudioProcessorEditor::
+
     ~PointillisticSynthAudioProcessorEditor() = default;
 
 void PointillisticSynthAudioProcessorEditor::paint(juce::Graphics& g) {
