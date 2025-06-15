@@ -53,9 +53,9 @@ jobs:
       run: ctest --preset default --output-on-failure
 
     - name: Generate coverage report
-      working-directory: ${{env.GITHUB_WORKSPACE}}/build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
       run: |
-        gcovr -r .. --xml-pretty coverage.xml \
+        gcovr -r . --xml-pretty coverage.xml \
               --html coverage.html --html-details \
               --print-summary
 
