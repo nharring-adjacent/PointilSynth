@@ -146,13 +146,21 @@ All core source code for the synthesizer, including the audio engine, UI compone
 
 ### Running Tests
 
-The project includes a suite of unit tests. After building the project, you can typically find and run the test executable from your build directory.
+The project includes a suite of unit tests. After configuring and building with the
+`default` CMake preset, you can invoke the tests directly through `ctest`:
 
 ```bash
-# Example: navigate to build directory and run tests
-cd build/test/PointilSynthTests_artefacts/Debug/
-./PointilSynth_Test # Or PointilSynth_Test.exe on Windows
+# Configure and build using the default preset
+cmake --preset default
+cmake --build --preset default
+
+# Run the test suite
+ctest --preset default
 ```
+
+The `-C` flag is only meaningful when using a multi-config generator. Since the
+repository defaults to Ninja (a single-config generator), using `ctest -C debug`
+or similar will report "No tests were found".
 
 ## Dockerized Build Environment
 
