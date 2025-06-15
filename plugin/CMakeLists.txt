@@ -47,6 +47,7 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/PointilismInterfaces.h
     ${INCLUDE_DIR}/PresetManager.h
     ${INCLUDE_DIR}/Resampler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/PodComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
