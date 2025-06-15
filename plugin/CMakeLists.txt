@@ -11,7 +11,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth/")
 juce_add_plugin(
   ${PROJECT_NAME}
   COMPANY_NAME
-  "HHI" # 
+  "HHI" #
   IS_SYNTH
   TRUE # may change this
   NEEDS_MIDI_INPUT
@@ -19,13 +19,16 @@ juce_add_plugin(
   NEEDS_MIDI_OUTPUT
   FALSE # may change this
   PLUGIN_MANUFACTURER_CODE
-  HHIS # 
+  HHIS #
   PLUGIN_CODE
-  Pntl # 
+  Pntl #
   FORMATS
-  Standalone VST3 AU AAX #
+  Standalone
+  VST3
+  AU
+  AAX #
   PRODUCT_NAME
-  "PointillisticSynth" 
+  "PointillisticSynth"
 )
 
 # Sets the source files of the plugin project.
@@ -47,19 +50,30 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/PointilismInterfaces.h
     ${INCLUDE_DIR}/PresetManager.h
     ${INCLUDE_DIR}/Resampler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/PodComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth)
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth
+)
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
-target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core juce::juce_dsp juce::juce_gui_basics nlohmann_json::nlohmann_json)
-  
-target_link_libraries(
-  ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
+target_link_libraries_system(
+  ${PROJECT_NAME}
+  PUBLIC
+  juce::juce_audio_utils
+  juce::juce_audio_basics
+  juce::juce_audio_processors
+  juce::juce_core
+  juce::juce_dsp
+  juce::juce_gui_basics
+  nlohmann_json::nlohmann_json
 )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags)
 #                         juce::juce_recommended_warning_flags
 
 # These definitions are recommended by JUCE.
