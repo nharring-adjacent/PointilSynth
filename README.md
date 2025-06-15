@@ -198,6 +198,8 @@ This image is published to the GitHub Container Registry (GHCR) at:
 
 This is the exact image used by our GitHub Actions Continuous Integration (CI) workflow (`.github/workflows/cmake.yml`) to build and test the project, ensuring consistency between local and CI environments.
 
+When using this container (either locally or in CI), reference the repository path via the `$GITHUB_WORKSPACE` environment variable. The `github.workspace` context resolves to a host path that does not exist inside the container and will cause build or test steps to fail if used directly.
+
 ### Updating the `base` Image in GitHub Container Registry
 The `base` build environment image is automatically rebuilt and published to GHCR by the `.github/workflows/publish-docker-image.yml` workflow.
 
