@@ -33,25 +33,27 @@ jobs:
     # as they are now part of the Docker image.
 
     - name: Configure CMake
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -S . -B ${{github.workspace}}/build ${{ matrix.cmake_generator_flags }} \
+      run: cmake -S . build ${{ matrix.cmake_generator_flags }} \
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
           -DCMAKE_CXX_FLAGS="--coverage" \
           -DCMAKE_C_FLAGS="--coverage"
 
     - name: Build
+      working-direcotyr: ${{env.GITHUB_WORKSPACE}}
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
+      run: cmake --build build --config ${{ matrix.build_type }}
 
     - name: Test
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{env.GITHUB_WORKSPACE}}/build
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest -C ${{ matrix.build_type }} --output-on-failure
 
     - name: Generate coverage report
-      working-directory: ${{github.workspace}}/build
+      working-directory: ${{env.GITHUB_WORKSPACE}}/build
       run: |
         gcovr -r .. --xml-pretty coverage.xml \
               --html coverage.html --html-details \
@@ -62,5 +64,5 @@ jobs:
       with:
         name: coverage-${{ matrix.build_type }}
         path: |
-          ${{github.workspace}}/build/coverage.xml
-          ${{github.workspace}}/build/coverage.html
+          ${{env.GITHUB_WORKSPACE}}/build/coverage.xml
+          ${{env.GITHUB_WORKSPACE}}/build/coverage.html
