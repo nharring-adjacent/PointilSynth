@@ -42,7 +42,7 @@ jobs:
           -DCMAKE_C_FLAGS="--coverage"
 
     - name: Build
-      working-direcotyr: ${{env.GITHUB_WORKSPACE}}
+      working-directory: ${{env.GITHUB_WORKSPACE}}
       # Build your program with the given configuration
       run: cmake --build build --config ${{ matrix.build_type }}
 
