@@ -189,6 +189,10 @@ private:
   std::atomic<float> centralPan{0.0f};  // -1 (L) to 1 (R)
   std::atomic<float> panSpread{0.5f};   // 0 (no spread) to 1 (full spread)
 
+  // MIDI influence parameters
+  std::atomic<float> midiTargetPitch_{60.0f};
+  std::atomic<float> midiInfluence_{0.0f};
+
   // Distributions - these should be updated when parameters change.
   // For simplicity, the setters currently just store values. A more complete
   // implementation would update these distributions in the setters.
@@ -204,6 +208,9 @@ private:
 
 public:  // Public setter for sample rate, to be called by AudioEngine
   void setSampleRate(double sr);
+
+  // Method to set MIDI influence
+  void setMidiInfluence(int noteNumber, float influenceAmount);
 };
 
 /**
@@ -239,6 +246,9 @@ public:
 
   /** Provides a non-owning pointer to the model for the UI to control. */
   StochasticModel* getStochasticModel() { return &stochasticModel; }
+
+  /** Applies MIDI note and velocity influence to the stochastic model. */
+  void applyMidiInfluence(int noteNumber, float normalizedVelocity);
 
 private:
   double currentSampleRate = 44100.0;

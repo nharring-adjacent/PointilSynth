@@ -78,9 +78,26 @@ void StochasticModel::generateNewGrain(Grain& newGrain) {
   // Other members of Grain (pitch, pan, amplitude, etc.) are not set here
   // as per the current task. They would be set by other parts of
   // StochasticModel or have default values. Pitch
+
+  // Retrieve base pitch, MIDI target pitch, and MIDI influence
+  float basePitch = pitch.load(std::memory_order_relaxed);
+  float targetPitch = midiTargetPitch_.load(std::memory_order_relaxed);
+  float influence = midiInfluence_.load(std::memory_order_relaxed);
+
+  // Calculate effective pitch based on MIDI influence
+  float effectivePitch = (basePitch * (1.0f - influence)) + (targetPitch * influence);
+
+  if (influence > 0.0f) {
+    DBG("StochasticModel::generateNewGrain - MIDI Influence Active:");
+    DBG("  Base Pitch: " + juce::String(basePitch));
+    DBG("  Target Pitch: " + juce::String(targetPitch));
+    DBG("  Influence: " + juce::String(influence));
+    DBG("  Effective Pitch: " + juce::String(effectivePitch));
+  }
+
   using PitchDistributionParams = std::normal_distribution<float>::param_type;
   pitchDistribution.param(
-      PitchDistributionParams(pitch.load(), dispersion.load()));
+      PitchDistributionParams(effectivePitch, dispersion.load(std::memory_order_relaxed)));
   newGrain.pitch = pitchDistribution(randomEngine);
 
   // Pan
@@ -155,4 +172,9 @@ int StochasticModel::getSamplesUntilNextEvent() {
 
   // Fallback, though ideally all enum values should be handled.
   return INT_MAX;
+}
+
+void StochasticModel::setMidiInfluence(int noteNumber, float influenceAmount) {
+  midiTargetPitch_.store(static_cast<float>(noteNumber));
+  midiInfluence_.store(influenceAmount);
 }
