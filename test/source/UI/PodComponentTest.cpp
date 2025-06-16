@@ -1,4 +1,5 @@
 #include "PodComponent.h"  // Defines audio_plugin::PodComponent
+#include "Pointilsynth/ConfigManager.h"
 #include <gtest/gtest.h>
 #include <juce_gui_basics/juce_gui_basics.h>  // For ScopedJuceInitialiser_GUI
 
@@ -10,6 +11,7 @@ struct JuceGuiTestFixture : public ::testing::Test {
 };
 
 TEST_F(JuceGuiTestFixture, PodComponentCanConstruct) {
-  EXPECT_NO_THROW(std::make_unique<PodComponent>());
+  EXPECT_NO_THROW(
+      std::make_unique<PodComponent>(ConfigManager::ParamID::pitch, "Pitch"));
 }
 }  // namespace audio_plugin

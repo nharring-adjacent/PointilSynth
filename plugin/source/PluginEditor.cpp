@@ -8,7 +8,11 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
     audio_plugin::AudioPluginAudioProcessor& p)
     : juce::AudioProcessorEditor(&p),
       processorRef(p),
-      debugUIPanel(processorRef.getConfigManager()) {
+      debugUIPanel(processorRef.getConfigManager()),
+      pitchPod(ConfigManager::ParamID::pitch, "Pitch"),
+      densityPod(ConfigManager::ParamID::density, "Density"),
+      durationPod(ConfigManager::ParamID::avgDuration, "Duration"),
+      panPod(ConfigManager::ParamID::pan, "Pan") {
   addAndMakeVisible(pitchPod);
   addAndMakeVisible(densityPod);
   addAndMakeVisible(durationPod);

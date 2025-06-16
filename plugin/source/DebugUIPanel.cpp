@@ -7,111 +7,97 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
     : configManager(std::move(cfg)) {
   // Initialize and configure sliders and labels
   // Pitch
-  addAndMakeVisible(pitchSlider);
-  pitchSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  pitchSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
-  pitchSlider.setRange(20.0, 100.0, 0.1);  // MIDI note numbers
-  if (configManager)
-    pitchAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::pitch, pitchSlider);
+  pitchSlider =
+      configManager->createAttachedSlider(ConfigManager::ParamID::pitch);
+  pitchSlider->setRange(20.0, 100.0, 0.1);  // MIDI note numbers
+  pitchSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  pitchSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
+  addAndMakeVisible(*pitchSlider);
   addAndMakeVisible(pitchLabel);
   pitchLabel.setText("Pitch", juce::dontSendNotification);
-  pitchLabel.attachToComponent(&pitchSlider, true);  // true for onLeft
+  pitchLabel.attachToComponent(pitchSlider.get(), true);  // true for onLeft
 
   // Dispersion
-  addAndMakeVisible(dispersionSlider);
-  dispersionSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  dispersionSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
-  dispersionSlider.setRange(0.0, 24.0, 0.1);  // Semitones
-  if (configManager)
-    dispersionAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::dispersion,
-        dispersionSlider);
+  dispersionSlider =
+      configManager->createAttachedSlider(ConfigManager::ParamID::dispersion);
+  dispersionSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  dispersionSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
+  dispersionSlider->setRange(0.0, 24.0, 0.1);  // Semitones
+  addAndMakeVisible(*dispersionSlider);
   addAndMakeVisible(dispersionLabel);
   dispersionLabel.setText("Dispersion", juce::dontSendNotification);
-  dispersionLabel.attachToComponent(&dispersionSlider, true);
+  dispersionLabel.attachToComponent(dispersionSlider.get(), true);
 
   // Duration
-  addAndMakeVisible(durationSlider);
-  durationSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  durationSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
-  durationSlider.setRange(10.0, 1000.0, 1.0);  // Milliseconds
-  if (configManager)
-    durationAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::avgDuration,
-        durationSlider);
+  durationSlider =
+      configManager->createAttachedSlider(ConfigManager::ParamID::avgDuration);
+  durationSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  durationSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
+  durationSlider->setRange(10.0, 1000.0, 1.0);  // Milliseconds
+  addAndMakeVisible(*durationSlider);
   addAndMakeVisible(durationLabel);
   durationLabel.setText("Duration (ms)", juce::dontSendNotification);
-  durationLabel.attachToComponent(&durationSlider, true);
+  durationLabel.attachToComponent(durationSlider.get(), true);
 
   // Duration Variation
-  addAndMakeVisible(durationVariationSlider);
-  durationVariationSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  durationVariationSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80,
-                                          20);
-  durationVariationSlider.setRange(0.0, 1.0, 0.01);  // Percentage
-  if (configManager)
-    durationVariationAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::durationVariation,
-        durationVariationSlider);
+  durationVariationSlider = configManager->createAttachedSlider(
+      ConfigManager::ParamID::durationVariation);
+  durationVariationSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  durationVariationSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false,
+                                           80, 20);
+  durationVariationSlider->setRange(0.0, 1.0, 0.01);  // Percentage
+  addAndMakeVisible(*durationVariationSlider);
   addAndMakeVisible(durationVariationLabel);
   durationVariationLabel.setText("Duration Var.", juce::dontSendNotification);
-  durationVariationLabel.attachToComponent(&durationVariationSlider, true);
+  durationVariationLabel.attachToComponent(durationVariationSlider.get(), true);
 
   // Pan
-  addAndMakeVisible(panSlider);
-  panSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  panSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
-  panSlider.setRange(-1.0, 1.0, 0.01);  // -1 (L) to 1 (R)
-  if (configManager)
-    panAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::pan, panSlider);
+  panSlider = configManager->createAttachedSlider(ConfigManager::ParamID::pan);
+  panSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  panSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
+  panSlider->setRange(-1.0, 1.0, 0.01);  // -1 (L) to 1 (R)
+  addAndMakeVisible(*panSlider);
   addAndMakeVisible(panLabel);
   panLabel.setText("Pan", juce::dontSendNotification);
-  panLabel.attachToComponent(&panSlider, true);
+  panLabel.attachToComponent(panSlider.get(), true);
 
   // Pan Spread
-  addAndMakeVisible(panSpreadSlider);
-  panSpreadSlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  panSpreadSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
-  panSpreadSlider.setRange(0.0, 1.0, 0.01);  // Spread amount
-  if (configManager)
-    panSpreadAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::panSpread,
-        panSpreadSlider);
+  panSpreadSlider =
+      configManager->createAttachedSlider(ConfigManager::ParamID::panSpread);
+  panSpreadSlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  panSpreadSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
+  panSpreadSlider->setRange(0.0, 1.0, 0.01);  // Spread amount
+  addAndMakeVisible(*panSpreadSlider);
   addAndMakeVisible(panSpreadLabel);
   panSpreadLabel.setText("Pan Spread", juce::dontSendNotification);
-  panSpreadLabel.attachToComponent(&panSpreadSlider, true);
+  panSpreadLabel.attachToComponent(panSpreadSlider.get(), true);
 
   // Density
-  addAndMakeVisible(densitySlider);
-  densitySlider.setSliderStyle(juce::Slider::LinearHorizontal);
-  densitySlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
-  densitySlider.setRange(0.1, 50.0, 0.1);  // Grains per second
-  if (configManager)
-    densityAttachment = std::make_unique<SliderAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::density,
-        densitySlider);
+  densitySlider =
+      configManager->createAttachedSlider(ConfigManager::ParamID::density);
+  densitySlider->setSliderStyle(juce::Slider::LinearHorizontal);
+  densitySlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
+  densitySlider->setRange(0.1, 50.0, 0.1);  // Grains per second
+  addAndMakeVisible(*densitySlider);
   addAndMakeVisible(densityLabel);
   densityLabel.setText("Density (gr/s)", juce::dontSendNotification);
-  densityLabel.attachToComponent(&densitySlider, true);
+  densityLabel.attachToComponent(densitySlider.get(), true);
 
   // Temporal Distribution
-  addAndMakeVisible(temporalDistributionComboBox);
-  temporalDistributionComboBox.addItem(
+  temporalDistributionComboBox = configManager->createAttachedComboBox(
+      ConfigManager::ParamID::temporalDistribution);
+  addAndMakeVisible(*temporalDistributionComboBox);
+  temporalDistributionComboBox->addItem(
       "Uniform",
       static_cast<int>(StochasticModel::TemporalDistribution::Uniform) + 1);
-  temporalDistributionComboBox.addItem(
+  temporalDistributionComboBox->addItem(
       "Poisson",
       static_cast<int>(StochasticModel::TemporalDistribution::Poisson) + 1);
-  if (configManager)
-    temporalDistributionAttachment = std::make_unique<ComboBoxAttachment>(
-        configManager->getAPVTS(), ConfigManager::ParamID::temporalDistribution,
-        temporalDistributionComboBox);
+  // Attachment created by ConfigManager
   addAndMakeVisible(temporalDistributionLabel);
   temporalDistributionLabel.setText("Distribution", juce::dontSendNotification);
-  temporalDistributionLabel.attachToComponent(&temporalDistributionComboBox,
-                                              true);
+  temporalDistributionLabel.attachToComponent(
+      temporalDistributionComboBox.get(), true);
 
   // The editor is responsible for setting our size.
   // setSize(600, 400); // This was set by PluginEditor
@@ -121,6 +107,16 @@ DebugUIPanel::~DebugUIPanel() {
   // Destructor (JUCE handles cleanup of child components as they are owned)
   // Listeners are lambda based and managed by JUCE Slider/ComboBox, no manual
   // removal needed.
+  if (configManager) {
+    configManager->releaseAttachment(pitchSlider.get());
+    configManager->releaseAttachment(dispersionSlider.get());
+    configManager->releaseAttachment(durationSlider.get());
+    configManager->releaseAttachment(durationVariationSlider.get());
+    configManager->releaseAttachment(panSlider.get());
+    configManager->releaseAttachment(panSpreadSlider.get());
+    configManager->releaseAttachment(densitySlider.get());
+    configManager->releaseAttachment(temporalDistributionComboBox.get());
+  }
 }
 
 void DebugUIPanel::paint(juce::Graphics& g) {
@@ -156,14 +152,14 @@ void DebugUIPanel::resized() {
   // For attached labels, their width is part of the component they are attached
   // to. The FlexBox will lay out the main components (sliders, combobox).
 
-  addItemToFlexBox(pitchSlider, standardItemHeight);
-  addItemToFlexBox(dispersionSlider, standardItemHeight);
-  addItemToFlexBox(durationSlider, standardItemHeight);
-  addItemToFlexBox(durationVariationSlider, standardItemHeight);
-  addItemToFlexBox(panSlider, standardItemHeight);
-  addItemToFlexBox(panSpreadSlider, standardItemHeight);
-  addItemToFlexBox(densitySlider, standardItemHeight);
-  addItemToFlexBox(temporalDistributionComboBox, standardItemHeight);
+  addItemToFlexBox(*pitchSlider, standardItemHeight);
+  addItemToFlexBox(*dispersionSlider, standardItemHeight);
+  addItemToFlexBox(*durationSlider, standardItemHeight);
+  addItemToFlexBox(*durationVariationSlider, standardItemHeight);
+  addItemToFlexBox(*panSlider, standardItemHeight);
+  addItemToFlexBox(*panSpreadSlider, standardItemHeight);
+  addItemToFlexBox(*densitySlider, standardItemHeight);
+  addItemToFlexBox(*temporalDistributionComboBox, standardItemHeight);
 
   // Perform layout within the panel's bounds, reduced by a margin for
   // aesthetics

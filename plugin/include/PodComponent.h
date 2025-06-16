@@ -6,10 +6,14 @@ namespace audio_plugin {
 
 class PodComponent : public juce::Component {
 public:
-  PodComponent() = default;
-  ~PodComponent() override = default;
+  PodComponent(const juce::String& paramID, const juce::String& displayName);
+  ~PodComponent() override;
+
+  void resized() override;
 
 private:
+  std::unique_ptr<juce::Slider> slider_;
+  juce::String displayName_;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PodComponent)
 };
 

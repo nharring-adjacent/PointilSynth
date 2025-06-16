@@ -1,4 +1,5 @@
 #include "Pointilsynth/ConfigManager.h"
+#include <algorithm>
 
 namespace {
 static std::shared_ptr<ConfigManager> instance;
@@ -19,6 +20,42 @@ void ConfigManager::resetInstance() {
 
 juce::AudioProcessorValueTreeState& ConfigManager::getAPVTS() {
   return apvts_;
+}
+
+std::unique_ptr<juce::Slider> ConfigManager::createAttachedSlider(
+    const juce::String& paramID) {
+  auto slider = std::make_unique<juce::Slider>();
+  slider->setSliderStyle(juce::Slider::RotaryVerticalDrag);
+  slider->setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+  auto attachment =
+      std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+          apvts_, paramID, *slider);
+  sliderAttachments_.emplace_back(slider.get(), std::move(attachment));
+  return slider;
+}
+
+std::unique_ptr<juce::ComboBox> ConfigManager::createAttachedComboBox(
+    const juce::String& paramID) {
+  auto box = std::make_unique<juce::ComboBox>();
+  auto attachment =
+      std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+          apvts_, paramID, *box);
+  comboBoxAttachments_.emplace_back(box.get(), std::move(attachment));
+  return box;
+}
+
+void ConfigManager::releaseAttachment(juce::Slider* slider) {
+  sliderAttachments_.erase(
+      std::remove_if(sliderAttachments_.begin(), sliderAttachments_.end(),
+                     [slider](const auto& att) { return att.first == slider; }),
+      sliderAttachments_.end());
+}
+
+void ConfigManager::releaseAttachment(juce::ComboBox* box) {
+  comboBoxAttachments_.erase(
+      std::remove_if(comboBoxAttachments_.begin(), comboBoxAttachments_.end(),
+                     [box](const auto& att) { return att.first == box; }),
+      comboBoxAttachments_.end());
 }
 
 void ConfigManager::addListener(const juce::String& paramID, Callback cb) {
