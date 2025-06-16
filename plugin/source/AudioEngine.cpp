@@ -1,6 +1,6 @@
 #include <juce_audio_formats/juce_audio_formats.h>
 #include <juce_core/juce_core.h>  // For DBG, juce::File
-#include "PointilismInterfaces.h"
+#include "Pointilsynth/PointilismInterfaces.h"
 #include "Pointilsynth/ConfigManager.h"
 #include <vector>
 #include <algorithm>                 // Required for std::remove_if

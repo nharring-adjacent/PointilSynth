@@ -1,5 +1,5 @@
-#include "DebugUIPanel.h"
-#include "PointilismInterfaces.h"  // For StochasticModel::TemporalDistribution
+#include "Pointilsynth/DebugUIPanel.h"
+#include "Pointilsynth/PointilismInterfaces.h"  // For StochasticModel::TemporalDistribution
 #include "Pointilsynth/ConfigManager.h"
 
 // Constructor

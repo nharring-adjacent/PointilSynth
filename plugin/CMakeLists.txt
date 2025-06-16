@@ -43,6 +43,7 @@ juce_add_plugin(
 # Sets the source files of the plugin project.
 set(SOURCE_FILES
     source/AudioEngine.cpp
+    source/ConfigManager.cpp
     source/DebugUIPanel.cpp
     source/PluginProcessor.cpp
     source/PluginEditor.cpp

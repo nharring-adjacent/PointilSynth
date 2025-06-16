@@ -1,4 +1,4 @@
-#include "PointilismInterfaces.h"  // Assuming this is the correct path relative to the cpp file
+#include "Pointilsynth/PointilismInterfaces.h"  // Assuming this is the correct path relative to the cpp file
 #include "Pointilsynth/ConfigManager.h"
 #include <random>  // For distributions if needed directly in setters, though likely just for storage here
 #include <cmath>   // For std::abs, std::max etc. if needed
