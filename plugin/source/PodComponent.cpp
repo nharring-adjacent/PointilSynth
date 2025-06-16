@@ -8,6 +8,9 @@ PodComponent::PodComponent(const juce::String& paramID,
     : displayName_(displayName) {
   slider_ = ConfigManager::getInstance()->createAttachedSlider(paramID);
   addAndMakeVisible(*slider_);
+  label_.setText(displayName_, juce::dontSendNotification);
+  label_.setJustificationType(juce::Justification::centred);
+  addAndMakeVisible(label_);
 }
 
 PodComponent::~PodComponent() {
@@ -16,8 +19,11 @@ PodComponent::~PodComponent() {
 }
 
 void PodComponent::resized() {
+  auto area = getLocalBounds();
+  auto labelArea = area.removeFromBottom(20);
   if (slider_)
-    slider_->setBounds(getLocalBounds());
+    slider_->setBounds(area);
+  label_.setBounds(labelArea);
 }
 
 }  // namespace audio_plugin

@@ -13,6 +13,7 @@ public:
 
 private:
   std::unique_ptr<juce::Slider> slider_;
+  juce::Label label_;
   juce::String displayName_;
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PodComponent)
 };
