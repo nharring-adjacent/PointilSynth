@@ -15,7 +15,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
               ),
       configManager(ConfigManager::getInstance(this)),
-      audioEngine(configManager) {
+      audioEngine(configManager,
+                  &visualizationFifo,
+                  visualizationBuffer.data()) {
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {
@@ -119,32 +121,36 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(
 
 void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
                                              juce::MidiBuffer& midiMessages) {
-  //juce::ignoreUnused(midiMessages); // We will use midiMessages now
+  // juce::ignoreUnused(midiMessages); // We will use midiMessages now
 
   for (const auto metadata : midiMessages) {
     const auto msg = metadata.getMessage();
     if (msg.isNoteOn()) {
       int noteNumber = msg.getNoteNumber();
       float velocity = static_cast<float>(msg.getVelocity()) / 127.0f;
-      DBG("PluginProcessor::processBlock - MIDI Note On: Note " + juce::String(noteNumber) + ", Velocity: " + juce::String(velocity));
+      DBG("PluginProcessor::processBlock - MIDI Note On: Note " +
+          juce::String(noteNumber) + ", Velocity: " + juce::String(velocity));
       audioEngine.applyMidiInfluence(noteNumber, velocity);
       activeMidiNote_.store(noteNumber);
     } else if (msg.isNoteOff()) {
       int noteNumber = msg.getNoteNumber();
-      DBG("PluginProcessor::processBlock - MIDI Note Off: Note " + juce::String(noteNumber));
+      DBG("PluginProcessor::processBlock - MIDI Note Off: Note " +
+          juce::String(noteNumber));
       if (activeMidiNote_.load() == noteNumber) {
-        DBG("PluginProcessor::processBlock - Resetting MIDI influence for Note " + juce::String(noteNumber));
+        DBG("PluginProcessor::processBlock - Resetting MIDI influence for "
+            "Note " +
+            juce::String(noteNumber));
         audioEngine.applyMidiInfluence(noteNumber, 0.0f);
-        activeMidiNote_.store(-1); // Reset active MIDI note
+        activeMidiNote_.store(-1);  // Reset active MIDI note
       }
     }
   }
-  // It's good practice to clear MIDI messages you've processed if they aren't needed downstream,
-  // though in this plugin architecture, AudioEngine's processBlock receives it again.
-  // If AudioEngine itself doesn't process MIDI, you might clear it here:
-  // midiMessages.clear();
-  // However, since AudioEngine::processBlock takes midiMessages as an argument,
-  // it might still need them. For now, let's assume AudioEngine might use them or ignore them.
+  // It's good practice to clear MIDI messages you've processed if they aren't
+  // needed downstream, though in this plugin architecture, AudioEngine's
+  // processBlock receives it again. If AudioEngine itself doesn't process MIDI,
+  // you might clear it here: midiMessages.clear(); However, since
+  // AudioEngine::processBlock takes midiMessages as an argument, it might still
+  // need them. For now, let's assume AudioEngine might use them or ignore them.
 
   juce::ScopedNoDenormals noDenormals;
   auto totalNumInputChannels = getTotalNumInputChannels();
@@ -179,7 +185,8 @@ bool AudioPluginAudioProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor() {
-  return new PointillisticSynthAudioProcessorEditor(*this);
+  return new PointillisticSynthAudioProcessorEditor(*this, visualizationFifo,
+                                                    visualizationBuffer.data());
 }
 
 void AudioPluginAudioProcessor::getStateInformation(

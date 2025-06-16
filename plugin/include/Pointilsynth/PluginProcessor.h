@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PointilismInterfaces.h"  // Added for AudioEngine and StochasticModel
 #include "ConfigManager.h"
+#include <array>
 
 namespace audio_plugin {
 class AudioPluginAudioProcessor : public juce::AudioProcessor {
@@ -45,7 +46,11 @@ public:
 private:
   std::shared_ptr<ConfigManager> configManager;
   AudioEngine audioEngine;  // Added AudioEngine member
-  std::atomic<int> activeMidiNote_ {-1};
+  std::atomic<int> activeMidiNote_{-1};
+
+  static constexpr int kVisualizationFifoSize = 512;
+  juce::AbstractFifo visualizationFifo{kVisualizationFifoSize};
+  std::array<GrainInfoForVis, kVisualizationFifoSize> visualizationBuffer{};
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

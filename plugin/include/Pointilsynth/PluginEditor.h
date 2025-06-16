@@ -4,6 +4,7 @@
 #include "DebugUIPanel.h"     // Added for DebugUIPanel
 #include "PodComponent.h"     // Placeholder pod controls
 #include "UI/VisualizationComponent.h"
+#include <juce_core/juce_core.h>
 // PointilismInterfaces.h is included by PluginProcessor.h, which is included
 // above. If direct use of StochasticModel type was needed here, an include
 // would be good: #include "../../source/PointilismInterfaces.h"
@@ -13,8 +14,10 @@ namespace audio_plugin {
 class PointillisticSynthAudioProcessorEditor
     : public juce::AudioProcessorEditor {
 public:
-  explicit PointillisticSynthAudioProcessorEditor(
-      audio_plugin::AudioPluginAudioProcessor&);
+  PointillisticSynthAudioProcessorEditor(
+      audio_plugin::AudioPluginAudioProcessor&,
+      juce::AbstractFifo& fifo,
+      GrainInfoForVis* buffer);
   ~PointillisticSynthAudioProcessorEditor() override;
 
   void paint(juce::Graphics&) override;

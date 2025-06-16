@@ -1,24 +1,28 @@
-#include "Pointilsynth/PluginEditor.h" // Defines audio_plugin::PointillisticSynthAudioProcessorEditor
-#include "Pointilsynth/PluginProcessor.h" // For audio_plugin::AudioPluginAudioProcessor
+#include "Pointilsynth/PluginEditor.h"  // Defines audio_plugin::PointillisticSynthAudioProcessorEditor
+#include "Pointilsynth/PluginProcessor.h"  // For audio_plugin::AudioPluginAudioProcessor
 #include <gtest/gtest.h>
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace audio_plugin {
 // Minimal ScopedJuceInitialiser_GUI for tests needing it.
 struct JuceGuiTestFixture : public ::testing::Test {
-    JuceGuiTestFixture() = default;
-    juce::ScopedJuceInitialiser_GUI libraryInitialiser;
+  JuceGuiTestFixture() = default;
+  juce::ScopedJuceInitialiser_GUI libraryInitialiser;
 };
 
 // Test fixture for PluginEditor that needs a PluginProcessor
 class PluginEditorTest : public JuceGuiTestFixture {
 protected:
-    AudioPluginAudioProcessor processor; // Create a processor instance
+  AudioPluginAudioProcessor processor;  // Create a processor instance
+  juce::AbstractFifo fifo{8};
+  std::array<GrainInfoForVis, 8> buffer{};
+
 public:
-    PluginEditorTest() = default; // processor is default constructed
+  PluginEditorTest() = default;  // processor is default constructed
 };
 
 TEST_F(PluginEditorTest, CanConstruct) {
-    EXPECT_NO_THROW(std::make_unique<PointillisticSynthAudioProcessorEditor>(processor));
+  EXPECT_NO_THROW(std::make_unique<PointillisticSynthAudioProcessorEditor>(
+      processor, fifo, buffer.data()));
 }
-} // namespace audio_plugin
+}  // namespace audio_plugin

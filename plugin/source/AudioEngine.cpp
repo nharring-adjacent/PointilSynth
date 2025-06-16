@@ -7,8 +7,13 @@
 #include <cmath>                     // For std::pow, std::cos, std::sin
 #include "Pointilsynth/Resampler.h"  // For Resampler::getSample
 
-AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg)
-    : stochasticModel(std::move(cfg)), config_(std::move(cfg)) {}
+AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg,
+                         juce::AbstractFifo* visFifo,
+                         GrainInfoForVis* visBuffer)
+    : stochasticModel(std::move(cfg)),
+      config_(std::move(cfg)),
+      visualizationFifo_(visFifo),
+      visualizationBuffer_(visBuffer) {}
 
 void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
   currentSampleRate = sampleRate;
@@ -35,6 +40,16 @@ void AudioEngine::triggerNewGrain() {
   // - newGrain.sourceSamplePosition (if applicable for the current source type)
 
   grains.push_back(newGrain);
+
+  if (visualizationFifo_ && visualizationBuffer_) {
+    int start1, size1, start2, size2;
+    visualizationFifo_->prepareToWrite(1, start1, size1, start2, size2);
+    if (size1 > 0)
+      visualizationBuffer_[start1] = {
+          newGrain.pan, newGrain.pitch,
+          static_cast<float>(newGrain.durationInSamples / currentSampleRate)};
+    visualizationFifo_->finishedWrite(size1);
+  }
 }
 
 // Add the following method:

@@ -37,6 +37,16 @@ struct Grain {
 };
 
 /**
+ * @struct GrainInfoForVis
+ * @brief Lightweight data passed from the AudioEngine to the GUI thread.
+ */
+struct GrainInfoForVis {
+  float pan{};
+  float pitch{};
+  float durationSeconds{};
+};
+
+/**
  * @class StochasticModel
  * @brief Manages the probability distributions that govern grain creation.
  *
@@ -226,7 +236,9 @@ class AudioEngine {
 public:
   enum class GrainSourceType { Oscillator, AudioSample };
 
-  explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {});
+  explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {},
+                       juce::AbstractFifo* visFifo = nullptr,
+                       GrainInfoForVis* visBuffer = nullptr);
 
   /** Called by the host to prepare the engine for playback. */
   void prepareToPlay(double sampleRate, int samplesPerBlock);
@@ -272,6 +284,9 @@ private:
   Pointilsynth::Oscillator oscillator_;
   GrainEnvelope grainEnvelope_;
   std::atomic<GrainSourceType> currentSourceType_{GrainSourceType::Oscillator};
+
+  juce::AbstractFifo* visualizationFifo_{};
+  GrainInfoForVis* visualizationBuffer_{};
 
   void triggerNewGrain();
 };
