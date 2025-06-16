@@ -14,6 +14,7 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
       durationPod(ConfigManager::ParamID::avgDuration, "Duration"),
       panPod(ConfigManager::ParamID::pan, "Pan") {
   addAndMakeVisible(visualizationComponent);
+  addAndMakeVisible(debugUIPanel);
   addAndMakeVisible(pitchPod);
   addAndMakeVisible(densityPod);
   addAndMakeVisible(durationPod);
@@ -34,10 +35,12 @@ void PointillisticSynthAudioProcessorEditor::paint(juce::Graphics& g) {
 void PointillisticSynthAudioProcessorEditor::resized() {
   auto area = getLocalBounds();
 
-  auto visArea = area.removeFromTop(getHeight() * 2 / 3);
+  auto visArea = area.removeFromTop(getHeight() / 3);
   visualizationComponent.setBounds(visArea);
 
-  // Bottom third for the pods
+  auto debugArea = area.removeFromTop(getHeight() / 3);
+  debugUIPanel.setBounds(debugArea);
+
   auto podArea = area;
   auto podWidth = podArea.getWidth() / 4;
 

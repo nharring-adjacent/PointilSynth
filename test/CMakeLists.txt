@@ -12,6 +12,7 @@ set(TEST_SOURCE_FILES
     source/PluginEditorTest.cpp
     source/PluginProcessorTest.cpp
     source/PointilismInterfacesTest.cpp
+    source/StochasticModelListenerTest.cpp
     source/PresetManagerTest.cpp
     source/UI/PresetBrowserComponentTest.cpp
     source/UI/VisualizationComponentTest.cpp
