@@ -39,7 +39,7 @@ jobs:
 
       - uses: threeal/gcovr-action@v1
         with:
-          cobertura-out: build/coverage.xml
+          coveralls-out: build/coverage.xml
           html-out: build/coverage.html
           html-details: true
           print-summary: true
