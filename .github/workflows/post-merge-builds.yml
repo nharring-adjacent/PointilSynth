@@ -10,46 +10,44 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
-        build_type: [Release] # Only Release for post-merge
         include:
           - os: macos-latest
-            name: Build macos-latest Release (Xcode)
-            cmake_generator_flags: "" # Default Xcode generator
+            name: Build macOS Release (Xcode)
+            preset: Xcode
+            build_config: Release
           - os: windows-latest
-            name: Build windows-latest Release (VS)
-            cmake_generator_flags: "" # Default Visual Studio generator
+            name: Build Windows Release (VS)
+            preset: vs
+            build_config: Release
 
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
 
     steps:
-    # - name: List Xcode installations # Keep for potential future use if macos-14 is needed
-    #   if: matrix.os == 'macos-14' # or startsWith(matrix.os, 'macos-')
-    #   run: sudo ls -1 /Applications | grep "Xcode"
-    # - name: Select Xcode # Keep for potential future use
-    #   if: matrix.os == 'macos-14' # or startsWith(matrix.os, 'macos-')
-    #   # Example: sudo xcode-select -s /Applications/Xcode_15.3.app/Contents/Developer
-    #   # Adjust path as needed if using a specific Xcode version
-    #   run: echo "Using default Xcode version or configure specific version if needed"
+      # - name: List Xcode installations # Keep for potential future use if macos-14 is needed
+      #   if: matrix.os == 'macos-14' # or startsWith(matrix.os, 'macos-')
+      #   run: sudo ls -1 /Applications | grep "Xcode"
+      # - name: Select Xcode # Keep for potential future use
+      #   if: matrix.os == 'macos-14' # or startsWith(matrix.os, 'macos-')
+      #   # Example: sudo xcode-select -s /Applications/Xcode_15.3.app/Contents/Developer
+      #   # Adjust path as needed if using a specific Xcode version
+      #   run: echo "Using default Xcode version or configure specific version if needed"
 
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Cache dependencies
-      id: cache-libs
-      uses: actions/cache@v4
-      with:
-        path: ${{github.workspace}}/libs
-        key: libs-${{ matrix.os }}-${{ matrix.build_type }} # Add build_type to key for safety
+      - name: Cache dependencies
+        id: cache-libs
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/libs
+          key: libs-${{ matrix.os }}-${{ matrix.preset }}
 
-    # No Linux-specific dependencies needed here
+      - uses: threeal/cmake-action@v2
+        with:
+          args: --preset ${{ matrix.preset }}
+          build-args: --config ${{ matrix.build_config }}
 
-    - name: Configure CMake
-      run: cmake -S . -B ${{github.workspace}}/build ${{ matrix.cmake_generator_flags }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-
-    - name: Build
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      run: ctest -C ${{ matrix.build_type }} --output-on-failure
+      - uses: threeal/ctest-action@v1
+        with:
+          args: --preset ${{ matrix.preset }}
+          build-config: ${{ matrix.build_config }}
