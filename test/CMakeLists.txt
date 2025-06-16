@@ -14,6 +14,7 @@ set(TEST_SOURCE_FILES
     source/PointilismInterfacesTest.cpp
     source/PresetManagerTest.cpp
     source/UI/PresetBrowserComponentTest.cpp
+    source/UI/VisualizationComponentTest.cpp
     source/ResamplerTest.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
