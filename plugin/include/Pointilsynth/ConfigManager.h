@@ -34,8 +34,9 @@ public:
   void releaseAttachment(juce::Slider* slider);
   void releaseAttachment(juce::ComboBox* box);
 
-private:
   juce::AudioProcessorValueTreeState& getAPVTS();
+
+private:
   class FunctionListener : public juce::AudioProcessorValueTreeState::Listener {
   public:
     explicit FunctionListener(Callback fn) : fn_(std::move(fn)) {}
