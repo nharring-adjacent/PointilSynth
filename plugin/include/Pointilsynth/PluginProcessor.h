@@ -1,14 +1,18 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
-#include "PointilismInterfaces.h" // Added for AudioEngine and StochasticModel
+#include "PointilismInterfaces.h"  // Added for AudioEngine and StochasticModel
+#include "ConfigManager.h"
 
 namespace audio_plugin {
 class AudioPluginAudioProcessor : public juce::AudioProcessor {
 public:
   AudioPluginAudioProcessor();
   // Provide access to the StochasticModel for the editor
-  StochasticModel* getStochasticModel() { return audioEngine.getStochasticModel(); }
+  StochasticModel* getStochasticModel() {
+    return audioEngine.getStochasticModel();
+  }
+  std::shared_ptr<ConfigManager> getConfigManager() { return configManager; }
   ~AudioPluginAudioProcessor() override;
 
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -39,7 +43,8 @@ public:
   void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
-  AudioEngine audioEngine; // Added AudioEngine member
+  std::shared_ptr<ConfigManager> configManager;
+  AudioEngine audioEngine;  // Added AudioEngine member
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

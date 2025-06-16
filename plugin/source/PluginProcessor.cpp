@@ -1,6 +1,7 @@
 #include "Pointilsynth/ProjectInfo.h"
 #include "Pointilsynth/PluginProcessor.h"
 #include "Pointilsynth/PluginEditor.h"
+#include "Pointilsynth/ConfigManager.h"
 
 namespace audio_plugin {
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -12,10 +13,14 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-      ) {
+              ),
+      configManager(ConfigManager::getInstance(this)),
+      audioEngine(configManager) {
 }
 
-AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {}
+AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {
+  ConfigManager::resetInstance();
+}
 
 const juce::String AudioPluginAudioProcessor::getName() const {
   return ProjectInfo::projectName;
@@ -77,7 +82,8 @@ void AudioPluginAudioProcessor::prepareToPlay(double sampleRate,
                                               int samplesPerBlock) {
   // Use this method as the place to do any pre-playback
   // initialisation that you need..
-  // juce::ignoreUnused(sampleRate, samplesPerBlock); // Removed by audioEngine call
+  // juce::ignoreUnused(sampleRate, samplesPerBlock); // Removed by audioEngine
+  // call
   audioEngine.prepareToPlay(sampleRate, samplesPerBlock);
 }
 
@@ -134,7 +140,8 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   // the samples and the outer loop is handling the channels.
   // Alternatively, you can process the samples with the channels
   // interleaved by keeping the same state.
-  // for (int channel = 0; channel < totalNumInputChannels; ++channel) { // Removed by audioEngine call
+  // for (int channel = 0; channel < totalNumInputChannels; ++channel) { //
+  // Removed by audioEngine call
   //   auto* channelData = buffer.getWritePointer(channel);
   //   juce::ignoreUnused(channelData);
   //   // ..do something to the data...

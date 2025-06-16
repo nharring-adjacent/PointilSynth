@@ -1,4 +1,5 @@
 #include "Pointilsynth/PresetManager.h"
+#include "Pointilsynth/ConfigManager.h"
 #include "juce_core/juce_core.h"  // For juce::File
 #include "nlohmann/json.hpp"      // For nlohmann::json
 

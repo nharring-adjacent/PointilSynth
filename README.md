@@ -101,7 +101,7 @@ This project is built with C++ and the JUCE framework.
 4.  Ensure you have the JUCE framework installed and correctly set up in your development environment. The project uses JUCE to handle plugin formats, audio/MIDI I/O, and basic windowing.
 5.  Use CMake to generate project files for your IDE (e.g., Xcode, Visual Studio) or build system.
     ```bash
-    # Example CMake configuration and build
+#Example CMake configuration and build
     cmake -B build -S .
     cmake --build build
     ```
@@ -137,9 +137,9 @@ All core source code for the synthesizer, including the audio engine, UI compone
 *   Please follow the coding style defined in `.clang-format`.
 *   Consider using the pre-commit hooks defined in `.pre-commit-config.yaml` to ensure code quality before committing.
     ```bash
-    # Install pre-commit (if you haven't already)
+#Install pre - commit(if you haven't already)
     pip install pre-commit
-    # Set up the git hook scripts
+#Set up the git hook scripts
     pre-commit install
     ```
 *   Write unit tests for new features or bug fixes.
@@ -150,17 +150,41 @@ The project includes a suite of unit tests. After configuring and building with 
 `default` CMake preset, you can invoke the tests directly through `ctest`:
 
 ```bash
-# Configure and build using the default preset
+#Configure and build using the default preset
 cmake --preset default
 cmake --build --preset default
 
-# Run the test suite
+#Run the test suite
 ctest --preset default
 ```
 
 The `-C` flag is only meaningful when using a multi-config generator. Since the
 repository defaults to Ninja (a single-config generator), using `ctest -C debug`
 or similar will report "No tests were found".
+
+### ConfigManager Usage
+
+`ConfigManager` is a thin wrapper around JUCE's
+`AudioProcessorValueTreeState` (APVTS) that acts as the central store for all
+plugin parameters. Each class that needs parameter access receives a shared
+pointer to this singleton.
+
+**Adding a parameter**
+
+1. Declare a new ID constant in `ConfigManager::ParamID`.
+2. Add the corresponding `juce::RangedAudioParameter` to
+   `ConfigManager::createLayout()` with an initial value and range.
+
+**Connecting UI controls**
+
+UI components create `SliderAttachment` or `ComboBoxAttachment` objects using
+the parameter ID. Non-UI classes like `StochasticModel` register callbacks via
+`ConfigManager::addListener` to react whenever the parameter value changes.
+
+This pattern ensures all parameter updates are thread safe and serialized
+through the APVTS, simplifying state save/load and automation handling.
+Always obtain the `ConfigManager` instance from the processor so that every
+component shares the same parameter state.
 
 ## Dockerized Build Environment
 
