@@ -3,6 +3,7 @@
 #include "PluginProcessor.h"  // Adjusted path
 #include "DebugUIPanel.h"     // Added for DebugUIPanel
 #include "PodComponent.h"     // Placeholder pod controls
+#include "UI/VisualizationComponent.h"
 // PointilismInterfaces.h is included by PluginProcessor.h, which is included
 // above. If direct use of StochasticModel type was needed here, an include
 // would be good: #include "../../source/PointilismInterfaces.h"
@@ -30,6 +31,7 @@ private:
   PodComponent densityPod;
   PodComponent durationPod;
   PodComponent panPod;
+  VisualizationComponent visualization;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(
       PointillisticSynthAudioProcessorEditor)

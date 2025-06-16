@@ -47,6 +47,7 @@ set(SOURCE_FILES
     source/DebugUIPanel.cpp
     source/PluginProcessor.cpp
     source/PluginEditor.cpp
+    source/UI/VisualizationComponent.cpp
     source/PresetManager.cpp
     source/StochasticModel.cpp
 )
@@ -62,6 +63,7 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/PresetManager.h
     ${INCLUDE_DIR}/Resampler.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/PodComponent.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/VisualizationComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
@@ -82,6 +84,7 @@ target_link_libraries_system(
   juce::juce_core
   juce::juce_dsp
   juce::juce_gui_basics
+  juce::juce_opengl
   nlohmann_json::nlohmann_json
 )
 

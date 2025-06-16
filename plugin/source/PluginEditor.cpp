@@ -13,6 +13,7 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
   addAndMakeVisible(densityPod);
   addAndMakeVisible(durationPod);
   addAndMakeVisible(panPod);
+  addAndMakeVisible(visualization);
 
   setSize(600, 400);  // Example size, can be adjusted
 }
@@ -25,22 +26,14 @@ void PointillisticSynthAudioProcessorEditor::paint(juce::Graphics& g) {
   g.fillAll(
       getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-  // You can add drawing code here for the visualization area if needed,
-  // or leave it blank if it's handled by another component.
-  // For now, let's draw a placeholder for the visualization area.
-  auto visArea = getLocalBounds().removeFromTop(getHeight() * 2 / 3);
-  g.setColour(juce::Colours::darkgrey);
-  g.fillRect(visArea);
-  g.setColour(juce::Colours::white);
-  g.drawText("Visualization Area", visArea, juce::Justification::centred,
-             false);
+  // Visualization is handled by the VisualizationComponent.
 }
 
 void PointillisticSynthAudioProcessorEditor::resized() {
   auto bounds = getLocalBounds();
 
-  // Top two-thirds for visualization (currently empty or placeholder)
-  bounds.removeFromTop(getHeight() * 2 / 3);
+  auto visArea = bounds.removeFromTop(getHeight() * 2 / 3);
+  visualization.setBounds(visArea);
 
   // Bottom third for the pods
   auto podArea = bounds;
