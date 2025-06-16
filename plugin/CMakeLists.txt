@@ -2,7 +2,16 @@ cmake_minimum_required(VERSION 3.22)
 
 # Version is needed by JUCE.
 project(PointillisticSynth VERSION 0.1.0)
+set(POINTILSYNTH_VERSION ${PROJECT_VERSION})
+set(POINTILSYNTH_PRODUCT_NAME "PointillisticSynth")
+set(POINTILSYNTH_COMPANY_NAME "HHI")
+set(POINTILSYNTH_MANUFACTURER_CODE "HHIS")
+set(POINTILSYNTH_PLUGIN_CODE "Pntl")
 
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth/ProjectInfo.h.in"
+  "${CMAKE_BINARY_DIR}/include/Pointilsynth/ProjectInfo.h"
+)
 # Adding a directory with the library/application name as a subfolder of the
 # include folder is a good practice. It helps avoid name clashes later on.
 set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth/")
@@ -11,7 +20,7 @@ set(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth/")
 juce_add_plugin(
   ${PROJECT_NAME}
   COMPANY_NAME
-  "HHI" #
+  "${POINTILSYNTH_COMPANY_NAME}"
   IS_SYNTH
   TRUE # may change this
   NEEDS_MIDI_INPUT
@@ -19,16 +28,16 @@ juce_add_plugin(
   NEEDS_MIDI_OUTPUT
   FALSE # may change this
   PLUGIN_MANUFACTURER_CODE
-  HHIS #
+  ${POINTILSYNTH_MANUFACTURER_CODE}
   PLUGIN_CODE
-  Pntl #
+  ${POINTILSYNTH_PLUGIN_CODE}
   FORMATS
   Standalone
   VST3
   AU
   AAX #
   PRODUCT_NAME
-  "PointillisticSynth"
+  "${POINTILSYNTH_PRODUCT_NAME}"
 )
 
 # Sets the source files of the plugin project.
@@ -55,9 +64,8 @@ set(HEADER_FILES
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth
-)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth ${CMAKE_BINARY_DIR}/include)
+
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.

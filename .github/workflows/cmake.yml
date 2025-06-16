@@ -11,14 +11,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [Debug] # Kept original Debug, can be expanded later
         include:
-          - build_type: Debug
-            name: Build Debug (Ninja) # Simplified name
-            cmake_generator_flags: -G Ninja
+          - name: Build Debug (Ninja)
+            preset: default
 
     name: ${{ matrix.name }}
-    runs-on: ubuntu-latest # Job runs on an ubuntu-latest host
+    runs-on: ubuntu-latest
 
     container:
       image: ghcr.io/${{ github.repository_owner }}/pointilism/pointilsynth-build-env:latest
@@ -27,40 +25,14 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    # Cache dependencies and Install Linux dependencies steps are removed
-    # as they are now part of the Docker image.
+      - uses: threeal/cmake-action@v2
+        with:
+          args: --preset ${{ matrix.preset }}
+          c-flags: --coverage
+          cxx-flags: --coverage
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -S . -B ${{github.workspace}}/build ${{ matrix.cmake_generator_flags }} \
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-          -DCMAKE_CXX_FLAGS="--coverage" \
-          -DCMAKE_C_FLAGS="--coverage"
-
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
-
-    - name: Test
-      working-directory: ${{github.workspace}}/build
-      # Execute tests defined by the CMake configuration.
-      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ctest -C ${{ matrix.build_type }} --output-on-failure
-
-    - name: Generate coverage report
-      working-directory: ${{github.workspace}}/build
-      run: |
-        gcovr -r .. --xml-pretty coverage.xml \
-              --html coverage.html --html-details \
-              --print-summary
-
-    - name: Upload coverage artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-${{ matrix.build_type }}
-        path: |
-          ${{github.workspace}}/build/coverage.xml
-          ${{github.workspace}}/build/coverage.html
+      - uses: threeal/ctest-action@v1
+        with:
+          args: --preset ${{ matrix.preset }}
