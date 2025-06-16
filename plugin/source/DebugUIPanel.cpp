@@ -13,9 +13,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
   pitchSlider->setSliderStyle(juce::Slider::LinearHorizontal);
   pitchSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
   addAndMakeVisible(*pitchSlider);
-  addAndMakeVisible(pitchLabel);
   pitchLabel.setText("Pitch", juce::dontSendNotification);
-  pitchLabel.attachToComponent(pitchSlider.get(), true);  // true for onLeft
+  pitchLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(pitchLabel);
 
   // Dispersion
   dispersionSlider =
@@ -24,9 +24,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
   dispersionSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
   dispersionSlider->setRange(0.0, 24.0, 0.1);  // Semitones
   addAndMakeVisible(*dispersionSlider);
-  addAndMakeVisible(dispersionLabel);
   dispersionLabel.setText("Dispersion", juce::dontSendNotification);
-  dispersionLabel.attachToComponent(dispersionSlider.get(), true);
+  dispersionLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(dispersionLabel);
 
   // Duration
   durationSlider =
@@ -35,9 +35,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
   durationSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
   durationSlider->setRange(10.0, 1000.0, 1.0);  // Milliseconds
   addAndMakeVisible(*durationSlider);
-  addAndMakeVisible(durationLabel);
   durationLabel.setText("Duration (ms)", juce::dontSendNotification);
-  durationLabel.attachToComponent(durationSlider.get(), true);
+  durationLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(durationLabel);
 
   // Duration Variation
   durationVariationSlider = configManager->createAttachedSlider(
@@ -47,9 +47,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
                                            80, 20);
   durationVariationSlider->setRange(0.0, 1.0, 0.01);  // Percentage
   addAndMakeVisible(*durationVariationSlider);
-  addAndMakeVisible(durationVariationLabel);
   durationVariationLabel.setText("Duration Var.", juce::dontSendNotification);
-  durationVariationLabel.attachToComponent(durationVariationSlider.get(), true);
+  durationVariationLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(durationVariationLabel);
 
   // Pan
   panSlider = configManager->createAttachedSlider(ConfigManager::ParamID::pan);
@@ -57,9 +57,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
   panSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
   panSlider->setRange(-1.0, 1.0, 0.01);  // -1 (L) to 1 (R)
   addAndMakeVisible(*panSlider);
-  addAndMakeVisible(panLabel);
   panLabel.setText("Pan", juce::dontSendNotification);
-  panLabel.attachToComponent(panSlider.get(), true);
+  panLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(panLabel);
 
   // Pan Spread
   panSpreadSlider =
@@ -68,9 +68,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
   panSpreadSlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
   panSpreadSlider->setRange(0.0, 1.0, 0.01);  // Spread amount
   addAndMakeVisible(*panSpreadSlider);
-  addAndMakeVisible(panSpreadLabel);
   panSpreadLabel.setText("Pan Spread", juce::dontSendNotification);
-  panSpreadLabel.attachToComponent(panSpreadSlider.get(), true);
+  panSpreadLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(panSpreadLabel);
 
   // Density
   densitySlider =
@@ -79,9 +79,9 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
   densitySlider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 80, 20);
   densitySlider->setRange(0.1, 50.0, 0.1);  // Grains per second
   addAndMakeVisible(*densitySlider);
-  addAndMakeVisible(densityLabel);
   densityLabel.setText("Density (gr/s)", juce::dontSendNotification);
-  densityLabel.attachToComponent(densitySlider.get(), true);
+  densityLabel.setJustificationType(juce::Justification::centredLeft);
+  addAndMakeVisible(densityLabel);
 
   // Temporal Distribution
   temporalDistributionComboBox = configManager->createAttachedComboBox(
@@ -94,10 +94,10 @@ DebugUIPanel::DebugUIPanel(std::shared_ptr<ConfigManager> cfg)
       "Poisson",
       static_cast<int>(StochasticModel::TemporalDistribution::Poisson) + 1);
   // Attachment created by ConfigManager
-  addAndMakeVisible(temporalDistributionLabel);
   temporalDistributionLabel.setText("Distribution", juce::dontSendNotification);
-  temporalDistributionLabel.attachToComponent(
-      temporalDistributionComboBox.get(), true);
+  temporalDistributionLabel.setJustificationType(
+      juce::Justification::centredLeft);
+  addAndMakeVisible(temporalDistributionLabel);
 
   // The editor is responsible for setting our size.
   // setSize(600, 400); // This was set by PluginEditor
@@ -126,42 +126,22 @@ void DebugUIPanel::paint(juce::Graphics& g) {
 }
 
 void DebugUIPanel::resized() {
-  juce::FlexBox fb;
-  fb.flexDirection = juce::FlexBox::Direction::column;
-  fb.alignItems =
-      juce::FlexBox::AlignItems::stretch;  // Components will stretch to width
-  fb.justifyContent = juce::FlexBox::JustifyContent::flexStart;
+  auto area = getLocalBounds().reduced(10);
+  int labelWidth = 90;
+  int rowHeight = 25;
 
-  // Helper to add item with margin and fixed height
-  auto addItemToFlexBox = [&](juce::Component& comp, float height) {
-    // Labels are attached to the left, so they don't need separate FlexItems if
-    // they size themselves. The component itself (slider/combobox) takes the
-    // full width.
-    fb.items.add(juce::FlexItem(comp).withHeight(height).withMargin(
-        juce::FlexItem::Margin(2.0f, 0, 2.0f, 0)));  // Top/Bottom margin
+  auto layoutRow = [&](juce::Component& comp, juce::Label& label) {
+    auto row = area.removeFromTop(rowHeight);
+    label.setBounds(row.removeFromLeft(labelWidth));
+    comp.setBounds(row.reduced(2));
   };
 
-  float standardItemHeight = 25.0f;  // Standard height for sliders and combobox
-
-  // Labels are attached to the left of these components.
-  // Their width is set by label.attachToComponent or can be set explicitly if
-  // needed. For attached labels, their width is managed by JUCE. We can set a
-  // common width for labels if desired:
-  // pitchLabel.setMinimumHorizontalScale(0.8f); // Example
-  // Or ensure labels have enough text space.
-  // For attached labels, their width is part of the component they are attached
-  // to. The FlexBox will lay out the main components (sliders, combobox).
-
-  addItemToFlexBox(*pitchSlider, standardItemHeight);
-  addItemToFlexBox(*dispersionSlider, standardItemHeight);
-  addItemToFlexBox(*durationSlider, standardItemHeight);
-  addItemToFlexBox(*durationVariationSlider, standardItemHeight);
-  addItemToFlexBox(*panSlider, standardItemHeight);
-  addItemToFlexBox(*panSpreadSlider, standardItemHeight);
-  addItemToFlexBox(*densitySlider, standardItemHeight);
-  addItemToFlexBox(*temporalDistributionComboBox, standardItemHeight);
-
-  // Perform layout within the panel's bounds, reduced by a margin for
-  // aesthetics
-  fb.performLayout(getLocalBounds().reduced(10));
+  layoutRow(*pitchSlider, pitchLabel);
+  layoutRow(*dispersionSlider, dispersionLabel);
+  layoutRow(*durationSlider, durationLabel);
+  layoutRow(*durationVariationSlider, durationVariationLabel);
+  layoutRow(*panSlider, panLabel);
+  layoutRow(*panSpreadSlider, panSpreadLabel);
+  layoutRow(*densitySlider, densityLabel);
+  layoutRow(*temporalDistributionComboBox, temporalDistributionLabel);
 }
