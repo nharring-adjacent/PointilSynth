@@ -1,5 +1,6 @@
 #include "Pointilsynth/PluginEditor.h"
 #include "Pointilsynth/PluginProcessor.h"  // Ensure this path is correct based on include directories
+#include "Pointilsynth/ConfigManager.h"
 
 namespace audio_plugin {
 
@@ -7,7 +8,7 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
     audio_plugin::AudioPluginAudioProcessor& p)
     : juce::AudioProcessorEditor(&p),
       processorRef(p),
-      debugUIPanel(processorRef.getStochasticModel()) {
+      debugUIPanel(processorRef.getConfigManager()) {
   addAndMakeVisible(pitchPod);
   addAndMakeVisible(densityPod);
   addAndMakeVisible(durationPod);

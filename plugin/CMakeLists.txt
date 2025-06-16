@@ -46,12 +46,14 @@ set(SOURCE_FILES
     source/AudioEngine.cpp
     source/PluginEditor.cpp
     source/DebugUIPanel.cpp
+    source/ConfigManager.cpp
     source/StochasticModel.cpp
     source/PresetManager.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
 set(HEADER_FILES
     ${INCLUDE_DIR}/DebugUIPanel.h
+    ${INCLUDE_DIR}/ConfigManager.h
     ${INCLUDE_DIR}/GrainEnvelope.h
     ${INCLUDE_DIR}/Oscillator.h
     ${INCLUDE_DIR}/PluginEditor.h
@@ -64,8 +66,10 @@ set(HEADER_FILES
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 
 # Sets the include directories of the plugin project.
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth ${CMAKE_BINARY_DIR}/include)
-
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth
+                         ${CMAKE_BINARY_DIR}/include
+)
 
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
