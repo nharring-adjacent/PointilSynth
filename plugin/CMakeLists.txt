@@ -33,7 +33,7 @@ juce_add_plugin(
   ${POINTILSYNTH_PLUGIN_CODE}
   FORMATS
   Standalone
-  VST3
+  #VST3
   AU
   AAX #
   PRODUCT_NAME
@@ -42,12 +42,12 @@ juce_add_plugin(
 
 # Sets the source files of the plugin project.
 set(SOURCE_FILES
-    source/PluginProcessor.cpp
     source/AudioEngine.cpp
-    source/PluginEditor.cpp
     source/DebugUIPanel.cpp
-    source/StochasticModel.cpp
+    source/PluginProcessor.cpp
+    source/PluginEditor.cpp
     source/PresetManager.cpp
+    source/StochasticModel.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
 set(HEADER_FILES
