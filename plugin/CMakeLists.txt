@@ -48,6 +48,7 @@ set(SOURCE_FILES
     source/PluginProcessor.cpp
     source/PluginEditor.cpp
     source/PresetManager.cpp
+    source/UI/PresetBrowserComponent.cpp
     source/StochasticModel.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
@@ -61,6 +62,7 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/PointilismInterfaces.h
     ${INCLUDE_DIR}/PresetManager.h
     ${INCLUDE_DIR}/Resampler.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/PresetBrowserComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/PodComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
