@@ -90,6 +90,13 @@ void StochasticModel::generateNewGrain(Grain& newGrain) {
   float generatedPan = panDistribution(randomEngine);
   newGrain.pan = std::clamp(generatedPan, -1.0f, 1.0f);
 
+  // Set a default amplitude so grains are audible. This could be
+  // parameterized in a future update.
+  newGrain.amplitude = 0.2f;
+
+  // Start reading from the beginning of the source sample when applicable.
+  newGrain.sourceSamplePosition = 0.0;
+
   // Other grain properties will be set elsewhere or in future tasks.
   // For now, ensure isAlive is true and assign a temporary ID or leave as
   // default.
