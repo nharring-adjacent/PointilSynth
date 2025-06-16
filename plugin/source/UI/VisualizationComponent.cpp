@@ -41,7 +41,7 @@ void VisualizationComponent::timerCallback() {
     g.size = 4.0f;
     g.colour = juce::Colours::white;
     g.startTime = now;
-    g.maxAge = info.durationSeconds;
+    g.maxAge = static_cast<double>(info.durationSeconds);
     grains.push_back(g);
   }
 
