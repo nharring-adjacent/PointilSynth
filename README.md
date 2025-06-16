@@ -183,6 +183,8 @@ the parameter ID. Non-UI classes like `StochasticModel` register callbacks via
 
 This pattern ensures all parameter updates are thread safe and serialized
 through the APVTS, simplifying state save/load and automation handling.
+Always obtain the `ConfigManager` instance from the processor so that every
+component shares the same parameter state.
 
 ## Dockerized Build Environment
 
