@@ -49,6 +49,7 @@ set(SOURCE_FILES
     source/PluginEditor.cpp
     source/PresetManager.cpp
     source/UI/PresetBrowserComponent.cpp
+    source/UI/PodComponent.cpp
     source/StochasticModel.cpp
 )
 # Optional; includes header files in the project file tree in Visual Studio
