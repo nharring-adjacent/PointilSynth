@@ -24,7 +24,7 @@ juce_add_plugin(
   IS_SYNTH
   TRUE # may change this
   NEEDS_MIDI_INPUT
-  FALSE # may change this
+  TRUE # may change this
   NEEDS_MIDI_OUTPUT
   FALSE # may change this
   PLUGIN_MANUFACTURER_CODE

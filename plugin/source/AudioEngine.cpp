@@ -246,3 +246,7 @@ void AudioEngine::setGrainSource(int internalWaveformId) {
   }
   oscillator_.setWaveform(selectedWaveform);
 }
+
+void AudioEngine::applyMidiInfluence(int noteNumber, float normalizedVelocity) {
+  stochasticModel.setMidiInfluence(noteNumber, normalizedVelocity);
+}

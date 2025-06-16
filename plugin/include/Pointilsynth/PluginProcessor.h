@@ -45,6 +45,7 @@ public:
 private:
   std::shared_ptr<ConfigManager> configManager;
   AudioEngine audioEngine;  // Added AudioEngine member
+  std::atomic<int> activeMidiNote_ {-1};
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };
