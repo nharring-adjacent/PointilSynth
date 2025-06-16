@@ -32,7 +32,10 @@ juce_add_plugin(
   PLUGIN_CODE
   ${POINTILSYNTH_PLUGIN_CODE}
   FORMATS
-  Standalone VST3 AU AAX #
+  Standalone
+  VST3
+  AU
+  AAX #
   PRODUCT_NAME
   "${POINTILSYNTH_PRODUCT_NAME}"
 )
@@ -63,13 +66,22 @@ target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})
 # Sets the include directories of the plugin project.
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/Pointilsynth ${CMAKE_BINARY_DIR}/include)
 
+
 # Links to all necessary dependencies. The present ones are recommended by JUCE.
 # If you use one of the additional modules, like the DSP module, you need to specify it here.
-target_link_libraries_system(${PROJECT_NAME} PUBLIC juce::juce_audio_utils juce::juce_audio_basics juce::juce_audio_processors juce::juce_core juce::juce_dsp juce::juce_gui_basics nlohmann_json::nlohmann_json)
-  
-target_link_libraries(
-  ${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags
+target_link_libraries_system(
+  ${PROJECT_NAME}
+  PUBLIC
+  juce::juce_audio_utils
+  juce::juce_audio_basics
+  juce::juce_audio_processors
+  juce::juce_core
+  juce::juce_dsp
+  juce::juce_gui_basics
+  nlohmann_json::nlohmann_json
 )
+
+target_link_libraries(${PROJECT_NAME} PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags)
 #                         juce::juce_recommended_warning_flags
 
 # These definitions are recommended by JUCE.
