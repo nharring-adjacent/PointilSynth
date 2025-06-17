@@ -5,14 +5,17 @@
 namespace audio_plugin {
 
 PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
-    audio_plugin::AudioPluginAudioProcessor& p)
+    audio_plugin::AudioPluginAudioProcessor& p,
+    juce::AbstractFifo& fifo,
+    GrainInfoForVis* buffer)
     : juce::AudioProcessorEditor(&p),
       processorRef(p),
       debugUIPanel(processorRef.getConfigManager()),
       pitchPod(ConfigManager::ParamID::pitch, "Pitch"),
       densityPod(ConfigManager::ParamID::density, "Density"),
       durationPod(ConfigManager::ParamID::avgDuration, "Duration"),
-      panPod(ConfigManager::ParamID::pan, "Pan") {
+      panPod(ConfigManager::ParamID::pan, "Pan"),
+      visualizationComponent(fifo, buffer) {
   addAndMakeVisible(visualizationComponent);
   addAndMakeVisible(debugUIPanel);
   addAndMakeVisible(pitchPod);
