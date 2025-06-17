@@ -16,6 +16,20 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
               ),
       configManager(ConfigManager::getInstance(this)),
       audioEngine(configManager) {
+  juce::StringArray personalityChoices;
+  personalityChoices.add("Subtle");
+  personalityChoices.add("Aggressive");
+  personalityChoices.add("Pumping");
+
+  limiterPersonalityParam = new juce::AudioParameterChoice(
+      juce::ParameterID{"limiterPersonality", 1}, // Parameter ID
+      "Limiter Personality",     // Parameter Name
+      personalityChoices,        // Choices
+      0                          // Default index (Subtle)
+      // "Limiter Mode" // Parameter label (optional) - removing to see if it avoids deprecated constructor
+  );
+  addParameter(limiterPersonalityParam);
+  lastLimiterPersonalityIndex = limiterPersonalityParam->getIndex();
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {
@@ -145,6 +159,19 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   // midiMessages.clear();
   // However, since AudioEngine::processBlock takes midiMessages as an argument,
   // it might still need them. For now, let's assume AudioEngine might use them or ignore them.
+
+  int currentPersonalityIndex = limiterPersonalityParam->getIndex();
+  if (currentPersonalityIndex != lastLimiterPersonalityIndex) {
+      AudioEngine::LimiterPersonality newPersonality;
+      switch (currentPersonalityIndex) {
+          case 0: newPersonality = AudioEngine::LimiterPersonality::Subtle; break;
+          case 1: newPersonality = AudioEngine::LimiterPersonality::Aggressive; break;
+          case 2: newPersonality = AudioEngine::LimiterPersonality::Pumping; break;
+          default: newPersonality = AudioEngine::LimiterPersonality::Subtle; break; // Should not happen
+      }
+      audioEngine.setLimiterPersonality(newPersonality);
+      lastLimiterPersonalityIndex = currentPersonalityIndex;
+  }
 
   juce::ScopedNoDenormals noDenormals;
   auto totalNumInputChannels = getTotalNumInputChannels();

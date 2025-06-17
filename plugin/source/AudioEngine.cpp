@@ -8,12 +8,44 @@
 #include "Pointilsynth/Resampler.h"  // For Resampler::getSample
 
 AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg)
-    : stochasticModel(std::move(cfg)), config_(std::move(cfg)) {}
+    : stochasticModel(std::move(cfg)),
+      config_(std::move(cfg)),
+      currentLimiterPersonality(LimiterPersonality::Subtle) {}
 
-void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
+void AudioEngine::prepareToPlay(double sampleRate, int samplesPerBlock) {
   currentSampleRate = sampleRate;
   oscillator_.setSampleRate(sampleRate);
   stochasticModel.setSampleRate(sampleRate);  // Inform StochasticModel
+
+  juce::dsp::ProcessSpec spec;
+  spec.sampleRate = sampleRate;
+  spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+  // Assuming output is always stereo. If your plugin can change output channel count,
+  // this might need to be more dynamic, possibly based on processor's channel layout.
+  // For now, hardcoding to 2 as per typical synth plugins.
+  spec.numChannels = static_cast<juce::uint32>(2);
+
+  switch (currentLimiterPersonality.load()) {
+      case LimiterPersonality::Subtle:
+          limiter.setThreshold(-1.0f);
+          limiter.setRelease(100.0f);
+          break;
+      case LimiterPersonality::Aggressive:
+          limiter.setThreshold(-3.0f);
+          limiter.setRelease(50.0f);
+          break;
+      case LimiterPersonality::Pumping:
+          limiter.setThreshold(-6.0f);
+          limiter.setRelease(300.0f);
+          break;
+      default: // Fallback, though currentLimiterPersonality should always be valid
+          limiter.setThreshold(-1.0f);
+          limiter.setRelease(100.0f);
+          break;
+  }
+
+  limiter.prepare(spec);
+
   samplesUntilNextGrain = stochasticModel.getSamplesUntilNextEvent();
   grains.reserve(1024);  // Keep existing functionality
 }
@@ -156,6 +188,17 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
     }
   }  // End of outer sample loop
 
+  // --- Apply the limiter ---
+  // Wrap the main output buffer as an AudioBlock
+  juce::dsp::AudioBlock<float> block(buffer);
+
+  // Create a processing context from this block
+  juce::dsp::ProcessContextReplacing<float> context(block);
+
+  // Process the context with the limiter
+  limiter.process(context);
+  // --- Limiter processing done ---
+
   // Cleanup dead grains (this part remains from existing code)
   grains.erase(
       std::remove_if(grains.begin(), grains.end(),
@@ -249,4 +292,8 @@ void AudioEngine::setGrainSource(int internalWaveformId) {
 
 void AudioEngine::applyMidiInfluence(int noteNumber, float normalizedVelocity) {
   stochasticModel.setMidiInfluence(noteNumber, normalizedVelocity);
+}
+
+void AudioEngine::setLimiterPersonality(LimiterPersonality personality) {
+    currentLimiterPersonality.store(personality);
 }

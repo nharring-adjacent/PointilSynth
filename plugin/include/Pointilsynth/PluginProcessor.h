@@ -47,6 +47,9 @@ private:
   AudioEngine audioEngine;  // Added AudioEngine member
   std::atomic<int> activeMidiNote_ {-1};
 
+  juce::AudioParameterChoice* limiterPersonalityParam;
+  int lastLimiterPersonalityIndex = 0;
+
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };
 }  // namespace audio_plugin

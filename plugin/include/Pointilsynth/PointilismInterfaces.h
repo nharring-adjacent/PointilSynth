@@ -3,6 +3,7 @@
 // Modern, modular JUCE includes instead of the deprecated JuceHeader.h
 #include <juce_core/juce_core.h>
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_dsp/juce_dsp.h>
 
 #include "Oscillator.h"
 #include "GrainEnvelope.h"
@@ -226,6 +227,12 @@ class AudioEngine {
 public:
   enum class GrainSourceType { Oscillator, AudioSample };
 
+  enum class LimiterPersonality {
+      Subtle,
+      Aggressive,
+      Pumping
+  };
+
   explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {});
 
   /** Called by the host to prepare the engine for playback. */
@@ -250,6 +257,8 @@ public:
   /** Applies MIDI note and velocity influence to the stochastic model. */
   void applyMidiInfluence(int noteNumber, float normalizedVelocity);
 
+  void setLimiterPersonality(LimiterPersonality personality);
+
 private:
   double currentSampleRate = 44100.0;
   int grainIdCounter = 0;
@@ -272,6 +281,9 @@ private:
   Pointilsynth::Oscillator oscillator_;
   GrainEnvelope grainEnvelope_;
   std::atomic<GrainSourceType> currentSourceType_{GrainSourceType::Oscillator};
+
+  juce::dsp::Limiter<float> limiter;
+  std::atomic<LimiterPersonality> currentLimiterPersonality;
 
   void triggerNewGrain();
 };
