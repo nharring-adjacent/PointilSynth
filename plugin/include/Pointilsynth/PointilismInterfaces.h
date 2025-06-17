@@ -3,9 +3,11 @@
 // Modern, modular JUCE includes instead of the deprecated JuceHeader.h
 #include <juce_core/juce_core.h>
 #include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 
 #include "Oscillator.h"
 #include "GrainEnvelope.h"
+#include "InertialHistoryManager.h"
 #include "ConfigManager.h"
 
 #include <vector>
@@ -248,7 +250,8 @@ public:
    * This method will be called repeatedly on the real-time audio thread.
    */
   void processBlock(juce::AudioBuffer<float>& buffer,
-                    juce::MidiBuffer& midiMessages);
+                    juce::MidiBuffer& midiMessages,
+                    const juce::AudioPlayHead::PositionInfo& pos);
 
   /** Loads a user-provided audio file to be used as a grain source. */
   void loadAudioSample(const juce::File& audioFile);
@@ -287,6 +290,8 @@ private:
 
   juce::AbstractFifo* visualizationFifo_{};
   GrainInfoForVis* visualizationBuffer_{};
+
+  InertialHistoryManager inertialHistoryManager_;
 
   void triggerNewGrain();
 };

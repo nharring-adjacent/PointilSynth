@@ -43,6 +43,7 @@ juce_add_plugin(
 # Sets the source files of the plugin project.
 set(SOURCE_FILES
     source/AudioEngine.cpp
+    source/InertialHistoryManager.cpp
     source/ConfigManager.cpp
     source/DebugUIPanel.cpp
     source/PluginProcessor.cpp
@@ -61,6 +62,7 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/Oscillator.h
     ${INCLUDE_DIR}/PluginEditor.h
     ${INCLUDE_DIR}/PluginProcessor.h
+    ${INCLUDE_DIR}/InertialHistoryManager.h
     ${INCLUDE_DIR}/PointilismInterfaces.h
     ${INCLUDE_DIR}/PresetManager.h
     ${INCLUDE_DIR}/Resampler.h
