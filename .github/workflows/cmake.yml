@@ -36,10 +36,9 @@ jobs:
       - name: Run Clang-Tidy
         uses: HorstBaerbel/action-clang-tidy@1.2
         with:
-          useexistingbuild: true
-          scandir: plugin
+          scandir: .
           builddir: build
-          excludedirs: include
+          excludedirs: tests
 
       - uses: threeal/ctest-action@v1
         with:
