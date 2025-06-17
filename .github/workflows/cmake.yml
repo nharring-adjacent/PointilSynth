@@ -33,6 +33,9 @@ jobs:
           c-flags: --coverage
           cxx-flags: --coverage
 
+      - name: Run Clang-Tidy
+        run: clang-tidy -p build --checks=-*,clang-analyzer-*,performance-*,portability-*,readability-* --warnings-as-errors=* plugin/source/*.cpp plugin/source/UI/*.cpp
+
       - uses: threeal/ctest-action@v1
         with:
           args: --preset ${{ matrix.preset }}
