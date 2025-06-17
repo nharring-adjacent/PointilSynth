@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 #include "PointilismInterfaces.h"  // Added for AudioEngine and StochasticModel
 #include "ConfigManager.h"
 #include <array>
@@ -50,6 +51,7 @@ private:
   std::array<GrainInfoForVis, kVisualizationFifoSize> visualizationBuffer{};
   AudioEngine audioEngine;  // Added AudioEngine member
   std::atomic<int> activeMidiNote_{-1};
+  juce::dsp::Compressor<float> outputCompressor;
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
 };

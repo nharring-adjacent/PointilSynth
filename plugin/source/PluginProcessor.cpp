@@ -2,6 +2,7 @@
 #include "Pointilsynth/PluginProcessor.h"
 #include "Pointilsynth/PluginEditor.h"
 #include "Pointilsynth/ConfigManager.h"
+#include <juce_dsp/juce_dsp.h>
 
 namespace audio_plugin {
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -87,12 +88,21 @@ void AudioPluginAudioProcessor::prepareToPlay(double sampleRate,
   // juce::ignoreUnused(sampleRate, samplesPerBlock); // Removed by audioEngine
   // call
   audioEngine.prepareToPlay(sampleRate, samplesPerBlock);
+
+  juce::dsp::ProcessSpec spec;
+  spec.sampleRate = sampleRate;
+  spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+  spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
+  outputCompressor.prepare(spec);
+  outputCompressor.setAttack(5.0f);
+  outputCompressor.setRelease(50.0f);
 }
 
 void AudioPluginAudioProcessor::releaseResources() {
   // When playback stops, you can use this as an opportunity to free up any
   // spare memory, etc.
   // audioEngine.releaseResources(); // If AudioEngine had such a method
+  outputCompressor.reset();
 }
 
 bool AudioPluginAudioProcessor::isBusesLayoutSupported(
@@ -178,6 +188,10 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   //   // ..do something to the data...
   // }
   audioEngine.processBlock(buffer, midiMessages);
+
+  juce::dsp::AudioBlock<float> block(buffer);
+  juce::dsp::ProcessContextReplacing<float> context(block);
+  outputCompressor.process(context);
 }
 
 bool AudioPluginAudioProcessor::hasEditor() const {
