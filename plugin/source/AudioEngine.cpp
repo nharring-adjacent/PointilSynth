@@ -2,6 +2,7 @@
 #include <juce_core/juce_core.h>  // For DBG, juce::File
 #include "Pointilsynth/PointilismInterfaces.h"
 #include "Pointilsynth/ConfigManager.h"
+#include "Pointilsynth/InertialHistoryManager.h"
 #include <vector>
 #include <algorithm>                 // Required for std::remove_if
 #include <cmath>                     // For std::pow, std::cos, std::sin
@@ -54,8 +55,24 @@ void AudioEngine::triggerNewGrain() {
 
 // Add the following method:
 void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
-                               juce::MidiBuffer& /*midiMessages*/) {
+                               juce::MidiBuffer& midiMessages,
+                               const juce::AudioPlayHead::PositionInfo& pos) {
   const int numSamples = buffer.getNumSamples();
+
+  double currentPpq = pos.getPpqPosition().orFallback(0.0);
+  double ppqPerBar = 4.0;
+  if (auto sig = pos.getTimeSignature())
+    ppqPerBar = sig->numerator * (4.0 / sig->denominator);
+  inertialHistoryManager_.update(currentPpq, ppqPerBar);
+
+  for (const auto metadata : midiMessages) {
+    const auto msg = metadata.getMessage();
+    if (msg.isNoteOn()) {
+      float velocity = static_cast<float>(msg.getVelocity()) / 127.0f;
+      inertialHistoryManager_.addNote(msg.getNoteNumber(), velocity,
+                                      currentPpq);
+    }
+  }
 
   // Update the countdown for the next grain event
   samplesUntilNextGrain -= numSamples;

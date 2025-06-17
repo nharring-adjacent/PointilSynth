@@ -17,6 +17,7 @@ set(TEST_SOURCE_FILES
     source/UI/PresetBrowserComponentTest.cpp
     source/UI/VisualizationComponentTest.cpp
     source/ResamplerTest.cpp
+    source/InertialHistoryManagerTest.cpp
 )
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 

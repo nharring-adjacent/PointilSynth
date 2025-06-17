@@ -187,7 +187,12 @@ void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
   //   juce::ignoreUnused(channelData);
   //   // ..do something to the data...
   // }
-  audioEngine.processBlock(buffer, midiMessages);
+  juce::AudioPlayHead::PositionInfo pos{};
+  if (auto* ph = getPlayHead()) {
+    if (auto opt = ph->getPosition())
+      pos = *opt;
+  }
+  audioEngine.processBlock(buffer, midiMessages, pos);
 
   juce::dsp::AudioBlock<float> block(buffer);
   juce::dsp::ProcessContextReplacing<float> context(block);
