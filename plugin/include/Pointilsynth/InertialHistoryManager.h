@@ -7,6 +7,7 @@ struct InertialNote {
   float initialInfluence{};
   float currentInfluence{};
   double startPpq{};
+  double ageInBars{};
 };
 
 class InertialHistoryManager {
