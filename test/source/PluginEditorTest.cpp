@@ -1,11 +1,11 @@
 #include "Pointilsynth/PluginEditor.h"  // Defines audio_plugin::PointillisticSynthAudioProcessorEditor
 #include "Pointilsynth/PluginProcessor.h"  // For audio_plugin::AudioPluginAudioProcessor
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace audio_plugin {
 // Minimal ScopedJuceInitialiser_GUI for tests needing it.
-struct JuceGuiTestFixture : public ::testing::Test {
+struct JuceGuiTestFixture {
   JuceGuiTestFixture() = default;
   juce::ScopedJuceInitialiser_GUI libraryInitialiser;
 };
@@ -21,8 +21,8 @@ public:
   PluginEditorTest() = default;  // processor is default constructed
 };
 
-TEST_F(PluginEditorTest, CanConstruct) {
-  EXPECT_NO_THROW(std::make_unique<PointillisticSynthAudioProcessorEditor>(
+TEST_CASE_METHOD(PluginEditorTest, "CanConstruct", "[PluginEditorTest]") {
+  REQUIRE_NOTHROW(std::make_unique<PointillisticSynthAudioProcessorEditor>(
       processor, fifo, buffer.data()));
 }
 }  // namespace audio_plugin

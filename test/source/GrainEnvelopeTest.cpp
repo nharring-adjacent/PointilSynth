@@ -1,6 +1,6 @@
 #include "Pointilsynth/GrainEnvelope.h"
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 
-TEST(GrainEnvelopeTest, CanConstruct) {
-    EXPECT_NO_THROW(std::make_unique<GrainEnvelope>());
+TEST_CASE("CanConstruct", "[GrainEnvelopeTest]") {
+  REQUIRE_NOTHROW(std::make_unique<GrainEnvelope>());
 }
