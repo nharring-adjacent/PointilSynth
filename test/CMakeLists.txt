@@ -1,8 +1,23 @@
 cmake_minimum_required(VERSION 3.22)
 project(PointilSynthTests VERSION 0.1.0)
 
+cpmaddpackage(
+  NAME
+  Catch2
+  GITHUB_REPOSITORY
+  catchorg/Catch2
+  VERSION
+  3.5.2
+  OPTIONS
+  "CATCH_INSTALL_DOCS OFF"
+  "CATCH_INSTALL_EXTRAS OFF"
+)
+
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+
 enable_testing()
-include(GoogleTest) # For GTest::gtest_main and gtest_discover_tests
+include(CTest)
+include(Catch)
 
 set(TEST_SOURCE_FILES
     source/DebugUIPanelTest.cpp
@@ -39,21 +54,16 @@ target_link_libraries(
          juce::juce_recommended_lto_flags
          juce::juce_audio_processors
          nlohmann_json::nlohmann_json
-  PRIVATE PointillisticSynth GTest::gtest_main
+  PRIVATE PointillisticSynth Catch2::Catch2WithMain
 )
 # juce::juce_recommended_warning_flags
 
 target_include_directories(
-  ${PROJECT_NAME} PRIVATE ${GOOGLETEST_SOURCE_DIR}/googletest/include "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/include"
-                          "${CMAKE_CURRENT_SOURCE_DIR}/.."
+  ${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../plugin/include" "${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
 target_sources(${PROJECT_NAME} PRIVATE ${TEST_SOURCE_FILES})
 
 # Removed: set_source_files_properties(${TEST_SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 # JUCE toolchain should handle appropriate warnings.
 
-if(CMAKE_GENERATOR STREQUAL Xcode)
-  gtest_discover_tests(${PROJECT_NAME} DISCOVERY_MODE PRE_TEST)
-else()
-  gtest_discover_tests(${PROJECT_NAME})
-endif()
+catch_discover_tests(${PROJECT_NAME})

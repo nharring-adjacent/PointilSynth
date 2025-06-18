@@ -1,6 +1,6 @@
-#include "Pointilsynth/Oscillator.h" // Defines Pointilsynth::Oscillator
-#include <gtest/gtest.h>
+#include "Pointilsynth/Oscillator.h"  // Defines Pointilsynth::Oscillator
+#include <catch2/catch_test_macros.hpp>
 
-TEST(OscillatorTest, CanConstruct) {
-    EXPECT_NO_THROW(std::make_unique<Pointilsynth::Oscillator>());
+TEST_CASE("CanConstruct", "[OscillatorTest]") {
+  REQUIRE_NOTHROW(std::make_unique<Pointilsynth::Oscillator>());
 }

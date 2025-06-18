@@ -1,17 +1,19 @@
 #include "UI/VisualizationComponent.h"
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 #include <juce_gui_basics/juce_gui_basics.h>
 
 namespace audio_plugin {
 
-struct VisualizationComponentTestFixture : public ::testing::Test {
+struct VisualizationComponentTestFixture {
   juce::ScopedJuceInitialiser_GUI libraryInitialiser;
   juce::AbstractFifo fifo{8};
   std::array<GrainInfoForVis, 8> buffer{};
 };
 
-TEST_F(VisualizationComponentTestFixture, CanConstruct) {
-  EXPECT_NO_THROW(VisualizationComponent comp(fifo, buffer.data()));
+TEST_CASE_METHOD(VisualizationComponentTestFixture,
+                 "CanConstruct",
+                 "[VisualizationComponentTestFixture]") {
+  REQUIRE_NOTHROW([&] { VisualizationComponent comp(fifo, buffer.data()); }());
 }
 
 }  // namespace audio_plugin

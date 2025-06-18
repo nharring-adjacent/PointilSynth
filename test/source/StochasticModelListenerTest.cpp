@@ -1,10 +1,10 @@
 #include "Pointilsynth/PointilismInterfaces.h"
 #include "Pointilsynth/PluginProcessor.h"
 #include "Pointilsynth/ConfigManager.h"
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 #include <juce_gui_basics/juce_gui_basics.h>
 
-TEST(StochasticModelListenerTest, UpdatesOnParameterChange) {
+TEST_CASE("UpdatesOnParameterChange", "[StochasticModelListenerTest]") {
   juce::ScopedJuceInitialiser_GUI libraryInitialiser;
   audio_plugin::AudioPluginAudioProcessor processor;
   auto cfg = ConfigManager::getInstance(&processor);
@@ -15,5 +15,5 @@ TEST(StochasticModelListenerTest, UpdatesOnParameterChange) {
     param->setValueNotifyingHost(param->convertTo0to1(80.0f));
   }
 
-  EXPECT_FLOAT_EQ(model.getPitch(), 80.0f);
+  REQUIRE(juce::approximatelyEqual(model.getPitch(), 80.0f));
 }

@@ -1,12 +1,12 @@
 #include "Pointilsynth/DebugUIPanel.h"
 #include "Pointilsynth/PluginProcessor.h"
 #include "Pointilsynth/ConfigManager.h"
-#include <gtest/gtest.h>
+#include <catch2/catch_test_macros.hpp>
 #include <juce_gui_basics/juce_gui_basics.h>
 
-TEST(DebugUIPanelTest, CanConstruct) {
+TEST_CASE("CanConstruct", "[DebugUIPanelTest]") {
   juce::ScopedJuceInitialiser_GUI libraryInitialiser;
   audio_plugin::AudioPluginAudioProcessor processor;
   auto cfg = ConfigManager::getInstance(&processor);
-  EXPECT_NO_THROW(std::make_unique<DebugUIPanel>(cfg));
+  REQUIRE_NOTHROW(std::make_unique<DebugUIPanel>(cfg));
 }
