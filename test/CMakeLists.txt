@@ -13,6 +13,32 @@ cpmaddpackage(
   "CATCH_INSTALL_EXTRAS OFF"
 )
 
+cpmaddpackage(
+  NAME
+  melatonin_audio_sparklines
+  GITHUB_REPOSITORY
+  sudara/melatonin_audio_sparklines
+  GIT_TAG
+  main
+  DOWNLOAD_ONLY TRUE
+)
+set(SPARKLINES_MODULE_PATH ${CMAKE_BINARY_DIR}/melatonin_audio_sparklines)
+file(COPY ${melatonin_audio_sparklines_SOURCE_DIR}/ DESTINATION ${SPARKLINES_MODULE_PATH})
+juce_add_module(${SPARKLINES_MODULE_PATH})
+
+cpmaddpackage(
+  NAME
+  melatonin_test_helpers
+  GITHUB_REPOSITORY
+  sudara/melatonin_test_helpers
+  GIT_TAG
+  main
+  DOWNLOAD_ONLY TRUE
+)
+set(TEST_HELPERS_MODULE_PATH ${CMAKE_BINARY_DIR}/melatonin_test_helpers)
+file(COPY ${melatonin_test_helpers_SOURCE_DIR}/ DESTINATION ${TEST_HELPERS_MODULE_PATH})
+juce_add_module(${TEST_HELPERS_MODULE_PATH})
+
 list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 
 enable_testing()
@@ -24,6 +50,7 @@ set(TEST_SOURCE_FILES
     source/GrainEnvelopeTest.cpp
     source/StandaloneGrainEnvelopeTest.cpp
     source/OscillatorTest.cpp
+    source/AudioEngineTest.cpp
     source/PluginEditorTest.cpp
     source/PluginProcessorTest.cpp
     source/PointilismInterfacesTest.cpp
@@ -55,6 +82,11 @@ target_link_libraries(
          juce::juce_audio_processors
          nlohmann_json::nlohmann_json
   PRIVATE PointillisticSynth Catch2::Catch2WithMain
+        melatonin_test_helpers
+)
+target_compile_definitions(
+  ${PROJECT_NAME}
+  PRIVATE JUCE_MODAL_LOOPS_PERMITTED=1
 )
 # juce::juce_recommended_warning_flags
 
