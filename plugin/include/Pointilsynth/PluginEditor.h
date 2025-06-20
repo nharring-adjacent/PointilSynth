@@ -2,6 +2,7 @@
 
 #include "PluginProcessor.h"  // Adjusted path
 #include "DebugUIPanel.h"     // Added for DebugUIPanel
+#include "DebugWindow.h"      // Popup window for DebugUIPanel
 #include "PodComponent.h"     // Placeholder pod controls
 #include "UI/VisualizationComponent.h"
 #include <juce_core/juce_core.h>
@@ -28,7 +29,8 @@ private:
   // access the processor object that created it.
   audio_plugin::AudioPluginAudioProcessor& processorRef;
 
-  DebugUIPanel debugUIPanel;  // Added DebugUIPanel member
+  juce::TextButton debugButton{"Open Debug"};
+  std::unique_ptr<DebugWindow> debugWindow;
 
   PodComponent pitchPod;
   PodComponent densityPod;
