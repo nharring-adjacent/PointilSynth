@@ -22,6 +22,8 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
   addAndMakeVisible(densityPod);
   addAndMakeVisible(durationPod);
   addAndMakeVisible(panPod);
+  addAndMakeVisible(openDebugButton);
+  openDebugButton.onClick = [this] { openDebugWindow(); };
 
   setSize(600, 400);  // Example size, can be adjusted
 }
@@ -45,12 +47,22 @@ void PointillisticSynthAudioProcessorEditor::resized() {
   debugUIPanel.setBounds(debugArea);
 
   auto podArea = area;
+  auto buttonArea = podArea.removeFromBottom(30);
+  openDebugButton.setBounds(buttonArea.reduced(4));
   auto podWidth = podArea.getWidth() / 4;
 
   pitchPod.setBounds(podArea.removeFromLeft(podWidth));
   densityPod.setBounds(podArea.removeFromLeft(podWidth));
   durationPod.setBounds(podArea.removeFromLeft(podWidth));
   panPod.setBounds(podArea);
+}
+
+void PointillisticSynthAudioProcessorEditor::openDebugWindow() {
+  if (debugWindow)
+    return;
+  debugWindow = std::make_unique<DebugUIWindow>(
+      processorRef.getConfigManager(), [this] { debugWindow.reset(); });
+  debugWindow->setVisible(true);
 }
 
 }  // namespace audio_plugin

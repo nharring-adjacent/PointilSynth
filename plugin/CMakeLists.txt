@@ -46,6 +46,7 @@ set(SOURCE_FILES
     source/InertialHistoryManager.cpp
     source/ConfigManager.cpp
     source/DebugUIPanel.cpp
+    source/DebugUIWindow.cpp
     source/PluginProcessor.cpp
     source/PluginEditor.cpp
     source/PresetManager.cpp
@@ -57,6 +58,7 @@ set(SOURCE_FILES
 # Optional; includes header files in the project file tree in Visual Studio
 set(HEADER_FILES
     ${INCLUDE_DIR}/DebugUIPanel.h
+    ${INCLUDE_DIR}/DebugUIWindow.h
     ${INCLUDE_DIR}/ConfigManager.h
     ${INCLUDE_DIR}/GrainEnvelope.h
     ${INCLUDE_DIR}/Oscillator.h
