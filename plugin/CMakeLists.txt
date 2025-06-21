@@ -52,6 +52,7 @@ set(SOURCE_FILES
     source/PresetManager.cpp
     source/UI/PresetBrowserComponent.cpp
     source/UI/VisualizationComponent.cpp
+    source/UI/InertialHistoryVisualizer.cpp
     source/PodComponent.cpp
     source/StochasticModel.cpp
 )
@@ -70,6 +71,7 @@ set(HEADER_FILES
     ${INCLUDE_DIR}/Resampler.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/PresetBrowserComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/VisualizationComponent.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/InertialHistoryVisualizer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/PodComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})

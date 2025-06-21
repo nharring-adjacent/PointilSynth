@@ -20,7 +20,8 @@ cpmaddpackage(
   sudara/melatonin_audio_sparklines
   GIT_TAG
   main
-  DOWNLOAD_ONLY TRUE
+  DOWNLOAD_ONLY
+  TRUE
 )
 set(SPARKLINES_MODULE_PATH ${CMAKE_BINARY_DIR}/melatonin_audio_sparklines)
 file(COPY ${melatonin_audio_sparklines_SOURCE_DIR}/ DESTINATION ${SPARKLINES_MODULE_PATH})
@@ -33,7 +34,8 @@ cpmaddpackage(
   sudara/melatonin_test_helpers
   GIT_TAG
   main
-  DOWNLOAD_ONLY TRUE
+  DOWNLOAD_ONLY
+  TRUE
 )
 set(TEST_HELPERS_MODULE_PATH ${CMAKE_BINARY_DIR}/melatonin_test_helpers)
 file(COPY ${melatonin_test_helpers_SOURCE_DIR}/ DESTINATION ${TEST_HELPERS_MODULE_PATH})
@@ -58,6 +60,7 @@ set(TEST_SOURCE_FILES
     source/PresetManagerTest.cpp
     source/UI/PresetBrowserComponentTest.cpp
     source/UI/VisualizationComponentTest.cpp
+    source/UI/InertialHistoryVisualizerTest.cpp
     source/ResamplerTest.cpp
     source/InertialHistoryManagerTest.cpp
 )
@@ -81,13 +84,9 @@ target_link_libraries(
          juce::juce_recommended_lto_flags
          juce::juce_audio_processors
          nlohmann_json::nlohmann_json
-  PRIVATE PointillisticSynth Catch2::Catch2WithMain
-        melatonin_test_helpers
+  PRIVATE PointillisticSynth Catch2::Catch2WithMain melatonin_test_helpers
 )
-target_compile_definitions(
-  ${PROJECT_NAME}
-  PRIVATE JUCE_MODAL_LOOPS_PERMITTED=1
-)
+target_compile_definitions(${PROJECT_NAME} PRIVATE JUCE_MODAL_LOOPS_PERMITTED=1)
 # juce::juce_recommended_warning_flags
 
 target_include_directories(
