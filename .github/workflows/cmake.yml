@@ -33,6 +33,13 @@ jobs:
           c-flags: --coverage
           cxx-flags: --coverage
 
+      - name: Run Clang-Tidy
+        uses: HorstBaerbel/action-clang-tidy@1.2
+        with:
+          scandir: .
+          builddir: build
+          excludedirs: tests
+
       - uses: threeal/ctest-action@v1
         with:
           args: --preset ${{ matrix.preset }}
