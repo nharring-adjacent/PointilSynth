@@ -114,7 +114,7 @@ void VisualizationComponent::triggerVisualFeedback(int note, float velocity) {
     feedback.alpha = 0.8f * velocity;
     feedback.color = getColorForPitch(note, velocity);
     
-    const juce::SpinLock::ScopedLockType lock(particleLock);
+    const juce::CriticalSection::ScopedLockType lock(particleLock);
     activeFeedbacks_.push_back(feedback);
 }
 
@@ -293,7 +293,7 @@ void VisualizationComponent::addNewGrains() {
         grain.currentAlpha = 1.0f;
         
         // Add to particles with thread safety
-        const juce::SpinLock::ScopedLockType lock(particleLock);
+        const juce::CriticalSection::ScopedLockType lock(particleLock);
         grains.push_back(grain);
         
         fifo_.finishedRead(size1);
@@ -318,7 +318,7 @@ void VisualizationComponent::renderParticles() {
     
     // Draw particles
     {
-        const juce::SpinLock::ScopedLockType lock(particleLock);
+        const juce::CriticalSection::ScopedLockType lock(particleLock);
         
         // Draw particles
         for (const auto& grain : grains) {

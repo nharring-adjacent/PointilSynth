@@ -52,7 +52,7 @@ public:
     
     // Set the InertialHistoryManager to visualize
     void setInertialHistoryManager(const InertialHistoryManager* manager) {
-        const juce::SpinLock::ScopedLockType lock(particleLock);
+        const juce::CriticalSection::ScopedLockType lock(particleLock);
         inertialHistoryManager_ = manager;
     }
     
