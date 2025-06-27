@@ -1,0 +1,89 @@
+# PointilSynth Windsurf Rules
+
+## 1. Code Organization and Structure Rules
+
+1. **JUCE Module Dependency Separation**: Always organize code with clear separation between JUCE modules. When modifying or extending functionality, follow existing patterns of importing only required JUCE modules (`juce_audio_formats`, `juce_core`, etc.) rather than importing all of JUCE.
+
+2. **Audio Processing Chain Isolation**: Keep DSP operations separated into discrete classes with clear responsibilities (like `GrainEnvelope`, `Resampler`, `StochasticModel`). Never mix UI and audio processing code in the same class.
+
+3. **Atomic Audio Component Pattern**: All audio processing components should:
+   - Be simple to test in isolation
+   - Have clearly defined interfaces with audio streams
+   - Process audio in a sample-by-sample manner when possible for maximum flexibility
+
+## 2. Real-time Audio Best Practices
+
+4. **No Allocation Rule**: Audio processing methods (especially those in the audio callback) must never allocate memory. All containers and buffers should be pre-allocated during `prepareToPlay()`.
+
+5. **Lock-free Communication**: Use atomic variables or lock-free FIFOs for communication between the audio thread and other threads (like UI or file loading).
+
+6. **Sample Rate Awareness**: All time-based calculations must account for the current sample rate. Temporal values should be stored as samples, not milliseconds, for real-time processing.
+
+## 3. Build System and CI Rules
+
+7. **CMake Preset Requirements**: All build operations must use CMake presets as defined in CMakePresets.json. Never invoke plain CMake commands without presets.
+
+8. **Dependency Management**: Use CPM for managing external dependencies, following the pattern established in the root CMakeLists.txt. Explicitly specify versions to ensure reproducibility.
+
+9. **CI Test Coverage**: All new features must have corresponding tests that are verified to pass in the CI pipeline. Tests should cover both the core functionality and edge cases.
+
+## 4. JUCE-Specific Development Patterns
+
+10. **JUCE Callback Thread Safety**: When implementing JUCE callback interfaces (like `AudioProcessor`), always consider thread-safety. UI updates from the audio thread must be properly synchronized.
+
+11. **Component Ownership**: Follow JUCE's ownership model where parent components own and destroy their children. Use `std::unique_ptr` for component ownership clarity.
+
+12. **Parameter Automation Safety**: All audio parameters should support thread-safe atomic reads/writes and smooth value transitions to avoid audio artifacts.
+
+## 5. Testing and Quality Assurance
+
+13. **DSP Unit Test Requirements**: Each DSP algorithm must have corresponding unit tests that verify:
+   - Correctness of processing logic
+   - Performance benchmarks
+   - Boundary conditions
+   - Numerical stability
+
+14. **Reference Output Testing**: Use golden file comparisons for complex audio processing algorithms to catch regressions.
+
+## 6. Audio Plugin Architecture
+
+15. **Parameter Encapsulation**: All plugin parameters must be:
+   - Registered with a unique ID
+   - Have appropriate range, default, and step values
+   - Include proper metadata (name, units)
+   - Support save/restore in presets
+
+16. **Preset State Management**: Use structured serialization (JSON) for all preset data. Implement both backwards and forwards compatibility in preset loading.
+
+17. **Multi-Platform Support**: All platform-specific code must be properly isolated using JUCE's preprocessor macros.
+
+## 7. Stochastic Model Development
+
+18. **Probability Distribution Encapsulation**: Follow the pattern in StochasticModel where probability distributions are encapsulated with clear interfaces rather than scattered random number generation.
+
+19. **State Persistence**: All stochastic generators should support saving their state for reproducible output when needed.
+
+## 8. Documentation and Comments
+
+20. **Parameter Documentation**: Every audio parameter must include documentation on:
+   - Expected range
+   - Units
+   - Effect on audio output
+   - Performance implications
+
+21. **Algorithm References**: Complex DSP algorithms must include references to academic papers or established implementations.
+
+## 9. Performance Optimization
+
+22. **Profile-Guided Optimization**: Performance-critical DSP code should include benchmark tests and be regularly profiled to ensure it meets the 15% CPU target.
+
+23. **SIMD Acceleration**: Use JUCE's DSP module and SIMD operations for performance-critical vector operations.
+
+## 10. UI Development
+
+24. **Visualization Data Flow**: Follow the established pattern of using a lock-free FIFO to pass visualization data from the audio thread to the UI thread.
+
+25. **Custom Component Structure**: Custom UI components should:
+   - Override only necessary paint/resize methods
+   - Use JUCE's LookAndFeel system for styling
+   - Support both light and dark themes
