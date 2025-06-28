@@ -57,7 +57,7 @@ void AudioEngine::triggerNewGrain() {
   // - newGrain.durationInSamples
   // - newGrain.sourceSamplePosition (if applicable for the current source type)
 
-  grains.push_back(newGrain);
+  grains.push_back(std::move(newGrain));
 
   if (visualizationFifo_ && visualizationBuffer_) {
     int start1, size1, start2, size2;
@@ -326,7 +326,7 @@ void AudioEngine::loadAudioSample(const juce::File& audioFile) {
 }
 
 // Grain Source Controls
-void AudioEngine::setGrainSource(int internalWaveformId) {
+void AudioEngine::setGrainSource() {
   currentSourceType_.store(AudioEngine::GrainSourceType::Oscillator);
 }
 

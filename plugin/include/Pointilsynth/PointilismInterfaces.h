@@ -28,6 +28,41 @@ namespace audio_plugin {
  * collection of these.
  */
 struct Grain {
+  // Default constructor
+  Grain() = default;
+
+  // Delete copy constructor and copy assignment operator
+  Grain(const Grain&) = delete;
+  Grain& operator=(const Grain&) = delete;
+
+  // Define move constructor
+  Grain(Grain&& other) noexcept
+      : isAlive(other.isAlive),
+        id(other.id),
+        pitch(other.pitch),
+        pan(other.pan),
+        amplitude(other.amplitude),
+        durationInSamples(other.durationInSamples),
+        ageInSamples(other.ageInSamples),
+        sourceSamplePosition(other.sourceSamplePosition),
+        oscillator(std::move(other.oscillator)) {}
+
+  // Define move assignment operator
+  Grain& operator=(Grain&& other) noexcept {
+    if (this != &other) {
+      isAlive = other.isAlive;
+      id = other.id;
+      pitch = other.pitch;
+      pan = other.pan;
+      amplitude = other.amplitude;
+      durationInSamples = other.durationInSamples;
+      ageInSamples = other.ageInSamples;
+      sourceSamplePosition = other.sourceSamplePosition;
+      oscillator = std::move(other.oscillator);
+    }
+    return *this;
+  }
+
   bool isAlive = true;  // Flag to mark for cleanup when the grain is finished.
   int id = 0;           // Unique identifier for visualization purposes.
 
@@ -281,7 +316,7 @@ public:
   void loadAudioSample(const juce::File& audioFile);
 
   /** Selects an internal waveform to be used as a grain source. */
-  void setGrainSource(int internalWaveformId);
+  void setGrainSource();
   
   /** Set the grain envelope parameters */
   void setGrainEnvelope(GrainEnvelope::Shape shape, 
