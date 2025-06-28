@@ -60,6 +60,8 @@ public:
     void triggerVisualFeedback(int note, float velocity);
 
 private:
+    juce::OpenGLContext openGLContext;
+
     struct VisualGrain {
         // Position and movement
         float x{};            // -1.0 to 1.0 (pan)
@@ -86,9 +88,20 @@ private:
 
     // OpenGL resources
     void initializeGL();
+    void initializeShaders();
+    void updateParticleBuffers();
     void renderParticles();
     void updateParticles();
     void addNewGrains();
+    
+    // OpenGL objects
+    std::unique_ptr<juce::OpenGLShaderProgram> shaderProgram;
+    GLuint particleVBO = 0;
+    GLuint particleVAO = 0;
+    
+    // Shader source code
+    static const char* vertexShaderSource;
+    static const char* fragmentShaderSource;
     
     // Thread safety
     juce::CriticalSection particleLock;
@@ -109,8 +122,6 @@ private:
     // Timing
     double lastUpdateTime{0.0};
     
-    // OpenGL context
-    juce::OpenGLContext openGLContext;
     
     // Visual state
     VisualPreset currentPreset_{VisualPreset::Default};
@@ -152,12 +163,18 @@ private:
     void drawNoteConnections(const InertialNote& note);
     void drawParticleTrail(const VisualGrain& grain);
     
-    // Shader program and buffers
-    std::unique_ptr<juce::OpenGLShaderProgram> shaderProgram;
+    // Shader program uniform
     std::unique_ptr<juce::OpenGLShaderProgram::Uniform> projectionMatrixUniform;
     
-    // Color management
+        // Color management
     juce::ColourGradient colorGradient;
+
+    // Particle properties
+    float minParticleSize_ = 2.0f;
+    float maxParticleSize_ = 20.0f;
+    float particleOpacity_ = 0.8f;
+    float gravity_ = 98.1f;
+    int trailLength_ = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VisualizationComponent)
 };

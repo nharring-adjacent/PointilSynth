@@ -1,4 +1,32 @@
 #include "UI/VisualizationComponent.h"
+
+// Include JUCE OpenGL first to avoid macro redefinition issues
+#include <juce_opengl/juce_opengl.h>
+
+// JUCE OpenGL includes all necessary OpenGL headers
+// No need for GLEW or GLFW as JUCE provides the necessary OpenGL context
+
+// Include standard OpenGL headers after JUCE
+#if JUCE_OPENGL_ES
+    #include <GLES3/gl3.h>
+#elif JUCE_MAC
+    #include <OpenGL/gl.h>
+    #include <OpenGL/glu.h>
+#else
+    #include <GL/gl.h>
+    #include <GL/glu.h>
+#endif
+
+namespace {
+    // Vertex shader source
+
+
+
+    // Fragment shader source
+
+
+}
+
 #include <cmath>
 #include <algorithm>
 #include "Pointilsynth/InertialHistoryManager.h"
@@ -22,27 +50,27 @@ juce::Colour getColorForPitch(float pitch, float velocity) {
 namespace {
     const juce::ColourGradient createDefaultGradient() {
         juce::ColourGradient g;
-        g.addColour(0.0f, juce::Colours::red);
-        g.addColour(0.2f, juce::Colours::orange);
-        g.addColour(0.4f, juce::Colours::yellow);
-        g.addColour(0.6f, juce::Colours::green);
-        g.addColour(0.8f, juce::Colours::blue);
-        g.addColour(1.0f, juce::Colours::violet);
+        g.addColour(static_cast<double>(0.0f), juce::Colours::red);
+        g.addColour(static_cast<double>(0.2f), juce::Colours::orange);
+        g.addColour(static_cast<double>(0.4f), juce::Colours::yellow);
+        g.addColour(static_cast<double>(0.6f), juce::Colours::green);
+        g.addColour(static_cast<double>(0.8f), juce::Colours::blue);
+        g.addColour(static_cast<double>(1.0f), juce::Colours::violet);
         return g;
     }
     
     const juce::ColourGradient createMinimalistGradient() {
         juce::ColourGradient g;
-        g.addColour(0.0f, juce::Colour::fromFloatRGBA(0.9f, 0.9f, 0.9f, 0.8f));
-        g.addColour(1.0f, juce::Colour::fromFloatRGBA(0.7f, 0.7f, 0.7f, 0.6f));
+        g.addColour(static_cast<double>(0.0f), juce::Colour::fromFloatRGBA(0.9f, 0.9f, 0.9f, 0.8f));
+        g.addColour(static_cast<double>(1.0f), juce::Colour::fromFloatRGBA(0.7f, 0.7f, 0.7f, 0.6f));
         return g;
     }
     
     const juce::ColourGradient createRetroGradient() {
         juce::ColourGradient g;
-        g.addColour(0.0f, juce::Colours::red);
-        g.addColour(0.5f, juce::Colours::yellow);
-        g.addColour(1.0f, juce::Colours::lime);
+        g.addColour(static_cast<double>(0.0f), juce::Colours::red);
+        g.addColour(static_cast<double>(0.5f), juce::Colours::yellow);
+        g.addColour(static_cast<double>(1.0f), juce::Colours::lime);
         return g;
     }
 }
@@ -120,6 +148,7 @@ void VisualizationComponent::triggerVisualFeedback(int note, float velocity) {
 
 void VisualizationComponent::updateVisualFeedbacks() {
     auto now = juce::Time::getMillisecondCounterHiRes() / 1000.0;
+(void)now; // suppress unused variable warning
     
     for (auto it = activeFeedbacks_.begin(); it != activeFeedbacks_.end(); ) {
         it->radius += 0.1f;
@@ -146,95 +175,110 @@ void VisualizationComponent::drawVisualFeedbacks(juce::Graphics& g) {
     }
 }
 
+// Initialize static shader source strings
+const char* VisualizationComponent::vertexShaderSource = R"(
+    #version 330 core
+    layout (location = 0) in vec2 position;
+    layout (location = 1) in vec4 color;
+    layout (location = 2) in float size;
+    out vec4 fragColor;
+    void main() {
+        gl_Position = vec4(position.x * 2.0 - 1.0, 1.0 - position.y * 2.0, 0.0, 1.0);
+        gl_PointSize = size;
+        fragColor = color;
+    }
+)";
+
+const char* VisualizationComponent::fragmentShaderSource = R"(
+    #version 330 core
+    in vec4 fragColor;
+    out vec4 outColor;
+    void main() {
+        outColor = fragColor;
+        // Make particles round
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        if (length(coord) > 0.5) {
+            discard;
+        }
+    }
+)";
+
 VisualizationComponent::VisualizationComponent(juce::AbstractFifo& fifo,
                                              GrainInfoForVis* buffer)
-    : fifo_(fifo), buffer_(buffer) {
+    : juce::Component("VisualizationComponent"),
+      juce::Timer(),
+      openGLContext(),
+      shaderProgram(),
+      particleVBO(0),
+      particleVAO(0),
+      particleLock(),
+      grains(),
+      fifo_(fifo),
+      buffer_(buffer),
+      lastUpdateTime(juce::Time::getMillisecondCounterHiRes() / 1000.0) {
+    setOpaque(true);
+    setSize(800, 600);
+    
+    // Initialize OpenGL
+    juce::OpenGLPixelFormat format;
     openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::openGL3_2);
+    openGLContext.setPixelFormat(format);
     openGLContext.setRenderer(this);
     openGLContext.attachTo(*this);
     openGLContext.setContinuousRepainting(true);
     
-    // Initialize OpenGL resources
-    openGLContext.executeOnGLThread([this](juce::OpenGLContext&) {
-        initializeGL();
-    }, false);
-    
-    startTimerHz(60);  // Update physics at 60 FPS
+    startTimerHz(60); // 60 FPS for visual updates
 }
 
 VisualizationComponent::~VisualizationComponent() {
     stopTimer();
-    openGLContext.setContinuousRepainting(false);
-    openGLContext.detach();
-}
-
-void VisualizationComponent::initializeGL() {
-    // Initialize shaders, VBOs, and other OpenGL resources
-    // This runs on the OpenGL thread
-    const char* vertexShaderSource = R"(
-        #version 330 core
-        layout (location = 0) in vec2 position;
-        layout (location = 1) in float size;
-        layout (location = 2) in vec4 color;
-        
-        out vec4 fragColor;
-        out float fragSize;
-        
-        uniform mat4 projection;
-        
-        void main() {
-            gl_Position = projection * vec4(position, 0.0, 1.0);
-            fragColor = color;
-            fragSize = size;
-            gl_PointSize = size;
-        }
-    )";
     
-    const char* fragmentShaderSource = R"(
-        #version 330 core
-        in vec4 fragColor;
-        in float fragSize;
-        out vec4 outColor;
-        
-        void main() {
-            vec2 coord = gl_PointCoord * 2.0 - 1.0;
-            float dist = length(coord);
-            if (dist > 1.0) discard;
-            
-            // Soft particle with glow
-            float alpha = smoothstep(1.0, 0.2, dist);
-            outColor = vec4(fragColor.rgb, fragColor.a * alpha);
-        }
-    )";
-    
-    // Compile shaders and link program
-    // [Shader compilation code...]
+    // Release OpenGL resources
+    if (openGLContext.isAttached()) {
+        openGLContext.detach();
+    }
 }
 
 void VisualizationComponent::renderOpenGL() {
+    jassert(juce::OpenGLHelpers::isContextActive());
+    
+    // Set up the viewport
+    // Set up the viewport
+    const float renderingScale = static_cast<float>(openGLContext.getRenderingScale());
+    const auto width = static_cast<int>(renderingScale * static_cast<float>(getWidth()));
+    const auto height = static_cast<int>(renderingScale * static_cast<float>(getHeight()));
+    // Use getPrimaryDisplay instead of deprecated getMainDisplay, and use width/height directly
+    auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
+    juce::Rectangle<int> screen(display->userArea.getX(), display->userArea.getY(), display->userArea.getWidth(), display->userArea.getHeight());
     juce::OpenGLHelpers::clear(juce::Colours::black);
+    juce::gl::glViewport(0, 0, width, height);
     
-    // Set up projection matrix
-    auto desktopScale = (float)openGLContext.getRenderingScale();
-    auto w = (float)getWidth();
-    auto h = (float)getHeight();
-    
-    // Set up blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
-    // Bind shader program and set uniforms
-    // [Shader binding and uniform setup...]
+    // Clear the background
+    juce::OpenGLHelpers::clear(juce::Colours::black);
     
     // Update and render particles
     updateParticles();
     renderParticles();
     
-    // Check for OpenGL errors
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        DBG("OpenGL error: " << std::hex << err);
+    // Reset the element buffers so child Components draw correctly
+    openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, 0);
+    openGLContext.extensions.glBindBuffer(juce::gl::GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void VisualizationComponent::openGLContextClosing() {
+    // Release OpenGL resources
+    if (particleVBO != 0) {
+        openGLContext.extensions.glDeleteBuffers(1, &particleVBO);
+        particleVBO = 0;
     }
+    
+    if (particleVAO != 0) {
+        openGLContext.extensions.glDeleteVertexArrays(1, &particleVAO);
+        particleVAO = 0;
+    }
+    
+    // Release shader program
+    shaderProgram.reset();
 }
 
 void VisualizationComponent::updateParticles() {
@@ -245,9 +289,9 @@ void VisualizationComponent::updateParticles() {
     // Update existing particles
     for (auto& grain : grains) {
         // Apply physics (gravity, velocity, etc.)
-        grain.velocityY += gravity * deltaTime;
-        grain.x += grain.velocityX * deltaTime;
-        grain.y += grain.velocityY * deltaTime;
+        grain.velocityY += static_cast<float>(static_cast<double>(gravity) * deltaTime);
+        grain.x += static_cast<float>(static_cast<double>(grain.velocityX) * deltaTime);
+        grain.y += static_cast<float>(static_cast<double>(grain.velocityY) * deltaTime);
         
         // Apply damping
         grain.velocityX *= 0.99f;
@@ -281,14 +325,13 @@ void VisualizationComponent::addNewGrains() {
         const auto& info = buffer_[start1];
         
         VisualGrain grain;
-        grain.pan = info.pan;
         grain.pitch = info.pitch;
         grain.size = 6.0f + info.velocity * 10.0f; // Size based on velocity
         grain.velocityX = (rand() % 100 - 50) * 0.01f; // Random horizontal velocity
         grain.velocityY = (rand() % 50) * -0.01f; // Upward velocity
         grain.startTime = now;
         grain.maxAge = static_cast<double>(info.durationSeconds) * 2.0; // Longer visual life
-        grain.colour = getColorForPitch(info.pitch, info.velocity);
+        grain.colour = juce::Colour::fromHSV(info.pitch / 127.0f, 0.8f, 0.9f, 1.0f);
         grain.currentSize = grain.size;
         grain.currentAlpha = 1.0f;
         
@@ -301,170 +344,48 @@ void VisualizationComponent::addNewGrains() {
 }
 
 void VisualizationComponent::renderParticles() {
-    // Use instanced rendering or point sprites for better performance
-    // This is a simplified version - in practice, you'd use VBOs and instancing
-    
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    glEnable(GL_POINT_SMOOTH);
-    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
-    
-    // Begin drawing particles
-    juce::OpenGLHelpers::ScopedSaveShaderState shaderState;
-    
-    // Draw note history first (behind particles)
-    if (inertialHistoryManager_) {
-        drawNoteHistory();
+    if (!shaderProgram) {
+        initializeShaders();
+        if (!shaderProgram) {
+            return; // Shader initialization failed
+        }
     }
+    
+    // Update particle data
+    updateParticleBuffers();
     
     // Draw particles
     {
         const juce::CriticalSection::ScopedLockType lock(particleLock);
         
-        // Draw particles
-        for (const auto& grain : grains) {
-            float x = juce::jmap(grain.x, -1.0f, 1.0f, 0.0f, static_cast<float>(getWidth()));
-            float y = juce::jmap(grain.y, 0.0f, 1.0f, static_cast<float>(getHeight()), 0.0f);
+        if (particleVBO != 0 && !grains.empty()) {
+            // Use shader program
+            shaderProgram->use();
             
-            // Set color with alpha
-            juce::Colour c = grain.colour.withAlpha(grain.currentAlpha);
-            glColor4f(c.getFloatRed(), c.getFloatGreen(), c.getFloatBlue(), c.getFloatAlpha());
+            // Bind VAO
+            openGLContext.extensions.glBindVertexArray(particleVAO);
             
-            // Draw point
-            glPointSize(grain.currentSize);
-            glBegin(GL_POINTS);
-            glVertex2f(x, y);
-            glEnd();
+            // Enable point sprites and point size control in shaders
+            juce::gl::glEnable(juce::gl::GL_PROGRAM_POINT_SIZE);
             
-            // Draw trail if enabled
-            if (!grain.trailPositions.empty()) {
-                drawParticleTrail(grain);
-            }
+            // Enable blending
+            juce::gl::glEnable(juce::gl::GL_BLEND);
+            juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
+            
+            // Draw points
+            juce::gl::glDrawArrays(juce::gl::GL_POINTS, 0, static_cast<GLsizei>(grains.size()));
+            
+            // Clean up
+            juce::gl::glDisable(juce::gl::GL_BLEND);
+            juce::gl::glBindVertexArray(0);
         }
-    }
-    
-    glDisable(GL_PROGRAM_POINT_SIZE);
-}
-
-void VisualizationComponent::drawNoteHistory() {
-    if (!inertialHistoryManager_) return;
-    
-    const int numNotes = inertialHistoryManager_->getNumNotes();
-    if (numNotes == 0) return;
-    
-    const float width = static_cast<float>(getWidth());
-    const float height = static_cast<float>(getHeight());
-    
-    // Draw note history background
-    glBegin(GL_QUADS);
-    glColor4f(0.05f, 0.05f, 0.1f, 0.3f);
-    glVertex2f(0, 0);
-    glVertex2f(width, 0);
-    glVertex2f(width, height * 0.15f); // Use top 15% for note history
-    glVertex2f(0, height * 0.15f);
-    glEnd();
-    
-    // Draw piano roll lines
-    glBegin(GL_LINES);
-    glColor4f(0.3f, 0.3f, 0.4f, 0.5f);
-    for (int i = 0; i < 12; ++i) {
-        float y = juce::jmap(static_cast<float>(i) / 11.0f, 0.0f, 1.0f, 
-                           height * 0.15f, 0.0f);
-        glVertex2f(0, y);
-        glVertex2f(width, y);
-    }
-    glEnd();
-    
-    // Draw active notes
-    for (int i = 0; i < numNotes; ++i) {
-        const auto& note = inertialHistoryManager_->getNote(i);
-        
-        // Map note number to y position (C1 to C8)
-        float noteY = juce::jmap(static_cast<float>(note.noteNumber % 12), 
-                               11.0f, 0.0f, 
-                               0.0f, height * 0.15f);
-        
-        // Map age to x position (right to left)
-        float age = static_cast<float>(note.ageInBars);
-        float x = width * (1.0f - std::min(age / 4.0f, 1.0f));
-        
-        // Draw note influence
-        float size = 8.0f + 16.0f * note.currentInfluence;
-        juce::Colour noteColor = juce::Colour::fromHSV(
-            static_cast<float>(note.noteNumber) / 127.0f, 
-            0.8f, 
-            0.9f,
-            0.8f * note.currentInfluence);
-            
-        glColor4f(noteColor.getFloatRed(), noteColor.getFloatGreen(), 
-                 noteColor.getFloatBlue(), noteColor.getFloatAlpha());
-        
-        glBegin(GL_QUADS);
-        glVertex2f(x - size/2, noteY - size/2);
-        glVertex2f(x + size/2, noteY - size/2);
-        glVertex2f(x + size/2, noteY + size/2);
-        glVertex2f(x - size/2, noteY + size/2);
-        glEnd();
-        
-        // Draw connection to grains
-        drawNoteConnections(note);
-    }
-}
-
-void VisualizationComponent::drawNoteConnections(const InertialNote& note) {
-    const float width = static_cast<float>(getWidth());
-    const float height = static_cast<float>(getHeight());
-    
-    // Find all grains that originated from this note
-    for (const auto& grain : grains) {
-        if (grain.sourceNoteNumber == note.noteNumber) {
-            float noteY = juce::jmap(static_cast<float>(note.noteNumber % 12), 
-                                   11.0f, 0.0f, 
-                                   0.0f, height * 0.15f);
-            float grainX = juce::jmap(grain.x, -1.0f, 1.0f, 0.0f, width);
-            float grainY = juce::jmap(grain.y, 0.0f, 1.0f, height, 0.0f);
-            
-            // Only draw connection if grain is below the note history area
-            if (grainY > height * 0.15f) {
-                float age = static_cast<float>(grain.ageInSeconds / grain.maxAge);
-                float alpha = 0.3f * (1.0f - age * 0.5f);
-                
-                glBegin(GL_LINES);
-                glColor4f(0.5f, 0.5f, 0.8f, alpha);
-                glVertex2f(grainX, grainY);
-                glVertex2f(grainX, height * 0.15f);
-                glEnd();
-            }
-        }
-    }
-}
-
-void VisualizationComponent::drawParticleTrail(const VisualGrain& grain) {
-    if (grain.trailPositions.size() < 2) return;
-    
-    glBegin(GL_LINE_STRIP);
-    float alphaStep = 1.0f / grain.trailPositions.size();
-    float currentAlpha = grain.currentAlpha * 0.7f;
-    
-    for (size_t i = 0; i < grain.trailPositions.size(); ++i) {
-        const auto& pos = grain.trailPositions[i];
-        float alpha = currentAlpha * (1.0f - (i * alphaStep));
-        juce::Colour c = grain.colour.withAlpha(alpha);
-        glColor4f(c.getFloatRed(), c.getFloatGreen(), 
-                 c.getFloatBlue(), c.getFloatAlpha());
-        glVertex2f(pos.first, pos.second);
-    }
-    glEnd();
-}
-
-void VisualizationComponent::updateVisualFeedbacks() {
-    // Update visual feedback animations
     }
 }
 
 void VisualizationComponent::resized() {
     // Update OpenGL viewport when component is resized
     if (openGLContext.isAttached()) {
-        openGLContext.updateEmbeddedPosition(getLocalBounds());
+        // No need to call updateEmbeddedPosition; OpenGL viewport will be updated automatically in renderOpenGL
     }
 }
 
@@ -475,4 +396,113 @@ void VisualizationComponent::timerCallback() {
     }
 }
 
+void VisualizationComponent::paint(juce::Graphics& g)
+{
+    // Draw JUCE-based overlays (meters, feedback, etc.)
+    drawVisualFeedbacks(g);
+    drawMeters(g);
+    // Optionally: draw other overlays or debug info here
+}
+
+void VisualizationComponent::newOpenGLContextCreated()
+{
+    // Initialize OpenGL resources (shaders, buffers, etc.)
+    initializeShaders();
+    // Create VBO/VAO if not already created
+    if (particleVBO == 0)
+    {
+        openGLContext.extensions.glGenBuffers(1, &particleVBO);
+    }
+    if (particleVAO == 0)
+    {
+        openGLContext.extensions.glGenVertexArrays(1, &particleVAO);
+    }
+}
+
+void VisualizationComponent::drawMeters(juce::Graphics& g) {
+    if (!showMeters_) return;
+
+    const int meterWidth = 10;
+    const int meterHeight = getHeight() - 20;
+    const int meterX = getWidth() - meterWidth - 10;
+    const int meterY = 10;
+
+    // Draw left meter
+    g.setColour(juce::Colours::grey);
+    g.drawRect(meterX - meterWidth - 5, meterY, meterWidth, meterHeight);
+    g.setColour(juce::Colours::green);
+    g.fillRect(meterX - meterWidth - 5, meterY + static_cast<int>(meterHeight * (1.0f - leftMeterLevel_)), meterWidth, static_cast<int>(meterHeight * leftMeterLevel_));
+
+    // Draw right meter
+    g.setColour(juce::Colours::grey);
+    g.drawRect(meterX, meterY, meterWidth, meterHeight);
+    g.setColour(juce::Colours::green);
+    g.fillRect(meterX, meterY + static_cast<int>(meterHeight * (1.0f - rightMeterLevel_)), meterWidth, static_cast<int>(meterHeight * rightMeterLevel_));
+}
+
+void VisualizationComponent::setGravity(float newGravity) {
+    gravity_ = newGravity;
+}
+
+void VisualizationComponent::setColorScheme(const juce::ColourGradient& gradient) {
+    colorGradient = gradient;
+}
+
+void VisualizationComponent::setTrailLength(int numFrames) {
+    trailLength_ = numFrames;
+}
+
+void VisualizationComponent::setParticleSize(float minSize, float maxSize) {
+    minParticleSize_ = minSize;
+    maxParticleSize_ = maxSize;
+}
+
+void VisualizationComponent::initializeShaders() {
+    shaderProgram = std::make_unique<juce::OpenGLShaderProgram>(openGLContext);
+    if (!shaderProgram->addVertexShader(vertexShaderSource) || !shaderProgram->addFragmentShader(fragmentShaderSource) || !shaderProgram->link()) {
+        shaderProgram.reset();
+    }
+}
+
+void VisualizationComponent::setParticleOpacity(float opacity) {
+    particleOpacity_ = opacity;
+}
+
+void VisualizationComponent::updateParticleBuffers() {
+    if (grains.empty()) return;
+
+    const juce::CriticalSection::ScopedLockType lock(particleLock);
+    
+    std::vector<float> vertexData;
+    vertexData.reserve(grains.size() * 7);
+
+    for (const auto& grain : grains) {
+        vertexData.push_back(grain.x);
+        vertexData.push_back(grain.y);
+        vertexData.push_back(grain.colour.getFloatRed());
+        vertexData.push_back(grain.colour.getFloatGreen());
+        vertexData.push_back(grain.colour.getFloatBlue());
+        vertexData.push_back(grain.colour.getFloatAlpha() * grain.currentAlpha);
+        vertexData.push_back(grain.currentSize);
+    }
+
+    openGLContext.extensions.glBindVertexArray(particleVAO);
+    openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, particleVBO);
+    openGLContext.extensions.glBufferData(juce::gl::GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertexData.size() * sizeof(float)), vertexData.data(), juce::gl::GL_DYNAMIC_DRAW);
+
+    // Position
+    openGLContext.extensions.glVertexAttribPointer(0, 2, juce::gl::GL_FLOAT, juce::gl::GL_FALSE, 7 * sizeof(float), nullptr);
+    openGLContext.extensions.glEnableVertexAttribArray(0);
+    // Color
+    openGLContext.extensions.glVertexAttribPointer(1, 4, juce::gl::GL_FLOAT, juce::gl::GL_FALSE, 7 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
+    openGLContext.extensions.glEnableVertexAttribArray(1);
+    // Size
+    openGLContext.extensions.glVertexAttribPointer(2, 1, juce::gl::GL_FLOAT, juce::gl::GL_FALSE, 7 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
+    openGLContext.extensions.glEnableVertexAttribArray(2);
+
+    openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, 0);
+    openGLContext.extensions.glBindVertexArray(0);
+}
+
 }  // namespace audio_plugin
+
