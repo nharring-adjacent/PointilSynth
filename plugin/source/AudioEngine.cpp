@@ -7,6 +7,7 @@
 #include <algorithm>                 // Required for std::remove_if
 #include <cmath>                     // For std::pow, std::cos, std::sin
 #include "Pointilsynth/Resampler.h"  // For Resampler::getSample
+#include "UI/VisualizationComponent.h"  // For VisualizationComponent definition
 
 AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg,
                          juce::AbstractFifo* visFifo,
@@ -15,25 +16,28 @@ AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg,
       config_(std::move(cfg)),
       visualizationFifo_(visFifo),
       visualizationBuffer_(visBuffer) {
+    // Visualization component initialization moved to initializeVisualization()
+}
+
+void AudioEngine::initializeVisualization() {
     // Initialize the visualization component if needed
     if (visualizationComponent_) {
         visualizationComponent_->setInertialHistoryManager(&inertialHistoryManager_);
-        visualizationComponent_->setVisualPreset(VisualizationComponent::VisualPreset::Default);
+        visualizationComponent_->setVisualPreset(audio_plugin::VisualizationComponent::VisualPreset::Default);
     }
 }
 
 void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
   currentSampleRate = sampleRate;
-  oscillator_.setSampleRate(sampleRate);
   stochasticModel.setSampleRate(sampleRate);  // Inform StochasticModel
   samplesUntilNextGrain = stochasticModel.getSamplesUntilNextEvent();
   grains.reserve(1024);  // Pre-allocate memory for grains
   
   // Initialize grain envelope with default settings
-  grainEnvelope_.setAttackTime(0.1f);  // 100ms attack
-  grainEnvelope_.setDecayTime(0.2f);   // 200ms decay
-  grainEnvelope_.setSustainLevel(0.7f); // 70% sustain
-  grainEnvelope_.setReleaseTime(0.1f);  // 100ms release
+  grainEnvelope_.setAttackTime(static_cast<double>(0.1f));  // 100ms attack
+  grainEnvelope_.setDecayTime(static_cast<double>(0.2f));   // 200ms decay
+  grainEnvelope_.setSustainLevel(static_cast<double>(0.7f)); // 70% sustain
+  grainEnvelope_.setReleaseTime(static_cast<double>(0.1f));  // 100ms release
   grainEnvelope_.setShape(GrainEnvelope::Shape::ADSR);
 }
 
@@ -60,8 +64,10 @@ void AudioEngine::triggerNewGrain() {
     visualizationFifo_->prepareToWrite(1, start1, size1, start2, size2);
     if (size1 > 0)
       visualizationBuffer_[start1] = {
-          newGrain.pan, newGrain.pitch,
-          static_cast<float>(newGrain.durationInSamples / currentSampleRate)};
+          newGrain.pan, newGrain.pitch, newGrain.amplitude,
+          static_cast<float>(newGrain.durationInSamples / currentSampleRate),
+          static_cast<int>(currentSourceType_.load()),
+          static_cast<int>(newGrain.oscillator.getWaveform())};
     visualizationFifo_->finishedWrite(size1);
   }
 }
@@ -89,9 +95,8 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
     }
     
     // Update inertial history with current position
-    // Update inertial history with current position
-    double currentPpq = pos.getPpqPosition().orFallback(0.0);
-    double ppqPerBar = 4.0;
+    currentPpq = pos.getPpqPosition().orFallback(0.0);
+    ppqPerBar = 4.0;
     if (auto sig = pos.getTimeSignature()) {
         ppqPerBar = sig->numerator * (4.0 / sig->denominator);
     }
@@ -114,8 +119,8 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
   }
 
   // Update time position and inertial history
-  double currentPpq = pos.getPpqPosition().orFallback(0.0);
-  double ppqPerBar = 4.0;
+  currentPpq = pos.getPpqPosition().orFallback(0.0);
+  ppqPerBar = 4.0;
   if (auto sig = pos.getTimeSignature())
     ppqPerBar = sig->numerator * (4.0 / sig->denominator);
   inertialHistoryManager_.update(currentPpq, ppqPerBar);
@@ -179,23 +184,23 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
       
       if (currentSourceType_.load() == GrainSourceType::Oscillator) {
         // Set oscillator frequency based on modulated grain pitch
-        float frequency = juce::MidiMessage::getMidiNoteInHertz(modulatedPitch);
-        oscillator_.setFrequency(frequency);
-        sampleValue = oscillator_.getNextSample() * modulatedAmp;
+        float frequency = static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(static_cast<int>(modulatedPitch + 0.5f)));
+        grain.oscillator.setFrequency(frequency);
+        sampleValue = grain.oscillator.getNextSample() * modulatedAmp;
       } 
       else if (currentSourceType_.load() == GrainSourceType::AudioSample && 
                sourceAudio.getNumSamples() > 0) {
         // Calculate playback rate considering pitch and global rate
         float effectivePitch = modulatedPitch + (samplePlaybackRate_ - 1.0f) * 12.0f;
-        double sourceSampleRate = 44100.0; // Should be set from loaded sample
-        double targetSampleRate = currentSampleRate * std::pow(2.0, (effectivePitch - 60.0) / 12.0);
-        double increment = (sourceSampleRate / targetSampleRate) * samplePlaybackRate_;
+        float sourceSampleRate = 44100.0f; // Should be set from loaded sample
+        float targetSampleRate = static_cast<float>(currentSampleRate) * std::pow(2.0f, (effectivePitch - 60.0f) / 12.0f);
+        float increment = (sourceSampleRate / targetSampleRate) * samplePlaybackRate_;
         
         // Calculate sample position with bounds checking
-        double samplePos = grain.sourceSamplePosition;
+        float samplePos = static_cast<float>(grain.sourceSamplePosition);
         if (sampleEndPos_ > 0 && samplePos >= sampleEndPos_ * sourceAudio.getNumSamples()) {
           if (loopSample_) {
-            samplePos = sampleStartPos_ * sourceAudio.getNumSamples();
+            samplePos = sampleStartPos_ * static_cast<float>(sourceAudio.getNumSamples());
           } else {
             grain.isAlive = false;
             continue;
@@ -203,7 +208,7 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
         }
         
         // Linear interpolation for smooth playback
-        int pos0 = static_cast<int>(samplePos);
+        int pos0 = static_cast<int>(std::floor(samplePos));
         float alpha = static_cast<float>(samplePos - pos0);
         
         if (pos0 + 1 < sourceAudio.getNumSamples()) {
@@ -214,7 +219,7 @@ void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
           sampleValue = sourceAudio.getSample(0, pos0 % sourceAudio.getNumSamples());
         }
         
-        grain.sourceSamplePosition += increment;
+        grain.sourceSamplePosition += static_cast<double>(increment);
         sampleValue *= modulatedAmp;
       }
 
@@ -323,10 +328,9 @@ void AudioEngine::loadAudioSample(const juce::File& audioFile) {
 // Grain Source Controls
 void AudioEngine::setGrainSource(int internalWaveformId) {
   currentSourceType_.store(AudioEngine::GrainSourceType::Oscillator);
-  oscillator_.setWaveform(static_cast<Pointilsynth::Oscillator::Waveform>(internalWaveformId));
 }
 
-void AudioEngine::setGrainEnvelope(Pointilsynth::GrainEnvelope::Shape shape, 
+void AudioEngine::setGrainEnvelope(GrainEnvelope::Shape shape, 
                                  float attackMs, float decayMs, 
                                  float sustainLevel, float releaseMs) {
   grainEnvelope_.setShape(shape);
@@ -337,6 +341,7 @@ void AudioEngine::setGrainEnvelope(Pointilsynth::GrainEnvelope::Shape shape,
 }
 
 void AudioEngine::setGrainPitch(float basePitch, float pitchVariation, bool quantize) {
+    (void)quantize; // suppress unused parameter warning
   stochasticModel.setPitchAndDispersion(basePitch, pitchVariation);
   // Add quantization if needed
 }
@@ -386,7 +391,7 @@ void AudioEngine::setModulationDepth(int source, int target, float depth) {
   // Implementation for modulation routing
   // source: 0=LFO1, 1=LFO2, 2=ENV1, etc.
   // target: 0=pitch, 1=pan, 2=volume, etc.
-  modulationMatrix_[source][target] = depth;
+  modulationMatrix_[static_cast<size_t>(source)][static_cast<size_t>(target)] = depth;
 }
 
 // Real-time parameter adjustment

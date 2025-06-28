@@ -51,7 +51,7 @@ namespace Resampler {
         return a0 + a1 * std::cos(M_PI * normalized_pos) + a2 * std::cos(2 * M_PI * normalized_pos);
     }
 
-    static float getSample(const juce::AudioBuffer<float>& sourceBuffer, int channel, double readPosition) {
+    [[maybe_unused]] static float getSample(const juce::AudioBuffer<float>& sourceBuffer, int channel, double readPosition) {
         const int numSamples = sourceBuffer.getNumSamples();
         // If the source buffer is empty, no resampling can be done.
         if (numSamples == 0) {

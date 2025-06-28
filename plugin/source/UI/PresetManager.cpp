@@ -7,14 +7,12 @@ const juce::Identifier PresetManager::presetNameProperty_ { "presetName" };
 
 const juce::File& PresetManager::getPresetDirectory() {
     static juce::File dir = [] {
-        auto dir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+        juce::File d = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
             .getChildFile("PointilSynth/Presets");
-        
-        if (!dir.exists()) {
-            dir.createDirectory();
+        if (!d.exists()) {
+            d.createDirectory();
         }
-        
-        return dir;
+        return d;
     }();
     
     return dir;
@@ -50,9 +48,13 @@ bool PresetManager::savePreset(const juce::String& presetName) {
         stream.truncate();
         
         std::unique_ptr<juce::XmlElement> xml(presetState.createXml());
-        if (xml && xml->writeTo(stream, {})) {
-            changeBroadcaster_.sendChangeMessage();
-            return true;
+        if (xml)
+        {
+            xml->writeTo(stream);
+            if (stream.getStatus().wasOk()) {
+                changeBroadcaster_.sendChangeMessage();
+                return true;
+            }
         }
     }
     
@@ -67,23 +69,20 @@ bool PresetManager::loadPreset(const juce::String& presetName) {
     }
     
     juce::FileInputStream stream(presetFile);
-    
     if (stream.openedOk()) {
-        auto xml = juce::XmlDocument::parse(stream);
-        
+        auto xml = juce::XmlDocument::parse(stream.readEntireStreamAsString());
         if (xml) {
             auto presetState = juce::ValueTree::fromXml(*xml);
-            
             if (isValidPreset(presetState)) {
                 // Copy parameter values from the preset
-                for (auto& param : apvts_.getParameters()) {
+                auto& params = apvts_.processor.getParameters();
+                for (auto* param : params) {
                     if (auto* paramWithID = dynamic_cast<juce::RangedAudioParameter*>(param)) {
                         auto paramID = paramWithID->paramID;
-                        auto value = presetState.getProperty(paramID, param->getValue());
+                        auto value = presetState.getProperty(paramID, static_cast<double>(param->getValue()));
                         param->setValueNotifyingHost(static_cast<float>(value));
                     }
                 }
-                
                 changeBroadcaster_.sendChangeMessage();
                 return true;
             }
@@ -122,7 +121,8 @@ juce::String PresetManager::getCurrentPresetName() const {
 
 void PresetManager::setDefaultState() {
     // Reset all parameters to their default values
-    for (auto* param : apvts_.getParameters()) {
+    auto& params = apvts_.processor.getParameters();
+    for (auto* param : params) {
         if (auto* rangedParam = dynamic_cast<juce::RangedAudioParameter*>(param)) {
             param->setValueNotifyingHost(rangedParam->getDefaultValue());
         }
@@ -145,9 +145,10 @@ juce::ValueTree PresetManager::createPresetValueTree(const juce::String& name) c
     preset.setProperty(presetNameProperty_, name, nullptr);
     
     // Save all parameter values
-    for (auto* param : apvts_.getParameters()) {
+    auto& params = apvts_.processor.getParameters();
+    for (auto* param : params) {
         if (auto* rangedParam = dynamic_cast<juce::RangedAudioParameter*>(param)) {
-            preset.setProperty(rangedParam->paramID, param->getValue(), nullptr);
+            preset.setProperty(rangedParam->paramID, static_cast<double>(param->getValue()), nullptr);
         }
     }
     

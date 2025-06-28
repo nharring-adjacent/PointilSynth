@@ -12,14 +12,25 @@ class GrainEnvelope {
 public:
     enum class Shape {
         Trapezoid,
-        Hann
+        Hann,
+        ADSR
     };
 
-    GrainEnvelope() : currentShape_(Shape::Trapezoid) {}
+    GrainEnvelope() : 
+        currentShape_(Shape::Trapezoid),
+        attackTime_(0.1f),
+        decayTime_(0.2f),
+        sustainLevel_(0.7f),
+        releaseTime_(0.1f) {}
 
     void setShape(Shape newShape) {
         currentShape_ = newShape;
     }
+    
+    void setAttackTime(float attackTime) { attackTime_ = attackTime; }
+    void setDecayTime(float decayTime) { decayTime_ = decayTime; }
+    void setSustainLevel(float sustainLevel) { sustainLevel_ = sustainLevel; }
+    void setReleaseTime(float releaseTime) { releaseTime_ = releaseTime; }
 
     float getAmplitude(int currentSample, int totalDuration) {
         if (totalDuration <= 0 || currentSample < 0 || currentSample >= totalDuration) {
@@ -27,6 +38,9 @@ public:
         }
 
         switch (currentShape_) {
+            case Shape::ADSR:
+                return getADSRValue(currentSample, totalDuration);
+                
             case Shape::Hann: {
                 // Requirement: 0.5 * (1 - cos(2 * PI * currentSample / totalDuration))
                 // Gain should be 0.0 at the start and end.
@@ -102,6 +116,54 @@ public:
 
 private:
     Shape currentShape_;
+    
+    // ADSR parameters (in seconds)
+    float attackTime_;
+    float decayTime_;
+    float sustainLevel_;
+    float releaseTime_;
+    
+    float getADSRValue(int currentSample, int totalDuration) {
+        if (totalDuration <= 0 || currentSample < 0) {
+            return 0.0f;
+        }
+        
+        float sampleRate = 44100.0f; // Default, should be set from AudioEngine
+        float attackSamples = attackTime_ * sampleRate;
+        float decaySamples = decayTime_ * sampleRate;
+        float releaseSamples = releaseTime_ * sampleRate;
+        float sustainSamples = totalDuration - (attackSamples + decaySamples + releaseSamples);
+        
+        float pos = currentSample;
+        
+        // Attack phase
+        if (pos < attackSamples) {
+            return pos / attackSamples;
+        }
+        
+        // Decay phase
+        pos -= attackSamples;
+        if (pos < decaySamples) {
+            float t = pos / decaySamples;
+            return 1.0f + t * (sustainLevel_ - 1.0f);
+        }
+        
+        // Sustain phase
+        pos -= decaySamples;
+        if (pos < sustainSamples) {
+            return sustainLevel_;
+        }
+        
+        // Release phase
+        pos -= sustainSamples;
+        if (pos < releaseSamples) {
+            float t = pos / releaseSamples;
+            return sustainLevel_ * (1.0f - t);
+        }
+        
+        // After release
+        return 0.0f;
+    }
 };
 
 #endif // GRAIN_ENVELOPE_H_

@@ -6,6 +6,14 @@
 
 namespace audio_plugin {
 
+PresetBrowserComponent::~PresetBrowserComponent() {
+    presetList.setModel(nullptr);
+}
+
+void PresetBrowserComponent::listBoxItemClicked(int rowNumber, const juce::MouseEvent&) { (void)rowNumber; }
+void PresetBrowserComponent::listBoxItemDoubleClicked(int rowNumber, const juce::MouseEvent&) { (void)rowNumber; }
+void PresetBrowserComponent::changeListenerCallback(juce::ChangeBroadcaster*) {}
+
 PresetBrowserComponent::PresetBrowserComponent(PresetManager& manager)
     : presetManager(manager) {
   addAndMakeVisible(presetList);
@@ -70,7 +78,7 @@ void PresetBrowserComponent::paint(juce::Graphics& g) {
   g.fillRect(headerBounds);
   
   g.setColour(juce::Colours::white);
-  g.setFont(juce::Font(16.0f, juce::Font::bold));
+  g.setFont(juce::Font(juce::FontOptions{}.withHeight(16.0f)).boldened());
   g.drawText("PRESETS", headerBounds.reduced(8, 0), juce::Justification::left, false);
 }
 
@@ -117,7 +125,7 @@ void PresetBrowserComponent::paintListBoxItem(int rowNumber,
 
   if (rowNumber < static_cast<int>(presets.size())) {
     auto text = presets[static_cast<size_t>(rowNumber)].file.getFileNameWithoutExtension();
-    g.setFont(juce::Font(14.0f, juce::Font::plain));
+    g.setFont(juce::Font(juce::FontOptions{}.withHeight(14.0f)));
     g.drawText(text, 10, 0, width - 10, height, juce::Justification::centredLeft, true);
   }
 }
@@ -184,19 +192,8 @@ void PresetBrowserComponent::savePreset() {
           presetList.selectRow(static_cast<int>(i));
           break;
         }
-    if (in.openedOk()) {
-      auto text = in.readEntireStreamAsString();
-      try {
-        j = nlohmann::json::parse(text.toStdString());
-      } catch (...) {
-        j = nlohmann::json{};
       }
     }
-    j["category"] = category.toStdString();
-    juce::FileOutputStream out(file);
-    std::string data = j.dump(4);
-    out.write(data.c_str(), data.size());
-    scanPresetDirectory();
   }
 }
 

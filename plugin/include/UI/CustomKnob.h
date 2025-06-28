@@ -4,15 +4,31 @@
 
 namespace audio_plugin {
 
+#include <functional>
+
+namespace audio_plugin {
+
 class CustomKnob : public juce::Slider {
 public:
     CustomKnob(const juce::String& name = {}) {
+        setWantsKeyboardFocus(false);
+        setMouseClickGrabsKeyboardFocus(false);
+
         setSliderStyle(juce::Slider::RotaryVerticalDrag);
         setTextBoxStyle(juce::Slider::TextBoxBelow, false, 60, 20);
         setColour(juce::Slider::textBoxTextColourId, juce::Colours::white);
         setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
         setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0x20ffffff));
         setName(name);
+    }
+
+    std::function<void()> onClick;
+
+    void mouseDown(const juce::MouseEvent& event) override {
+        if (onClick) {
+            onClick();
+        }
+        juce::Slider::mouseDown(event);
     }
     
     void paint(juce::Graphics& g) override {

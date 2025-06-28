@@ -111,6 +111,10 @@ void StochasticModel::generateNewGrain(Grain& newGrain) {
   // parameterized in a future update.
   newGrain.amplitude = 0.2f;
 
+  // Set oscillator waveform for the new grain
+  newGrain.oscillator.setWaveform(static_cast<Pointilsynth::Oscillator::Waveform>(oscillatorWaveformSelection_.load()));
+  newGrain.oscillator.setFrequency(static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(static_cast<int>(newGrain.pitch))));
+
   // Start reading from the beginning of the source sample when applicable.
   newGrain.sourceSamplePosition = 0.0;
 

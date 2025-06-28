@@ -50,6 +50,7 @@ set(SOURCE_FILES
     source/PluginProcessor.cpp
     source/PluginEditor.cpp
     source/PresetManager.cpp
+    source/UI/PresetManager.cpp
     source/UI/PresetBrowserComponent.cpp
     source/UI/VisualizationComponent.cpp
     source/UI/InertialHistoryVisualizer.cpp

@@ -1,5 +1,6 @@
 #include "UI/SynthesisTab.h"
 #include "UI/CustomKnob.h"
+#include "UI/DetailedKnobEditor.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 namespace audio_plugin {
@@ -99,8 +100,19 @@ void SynthesisTab::setupControls() {
         knob->setTextValueSuffix(suffix);
         
         // Attach to APVTS parameter
-        attachment_ = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
-            apvts_, id, *knob);
+        attachments_.push_back(std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+            apvts_, id, *knob));
+        
+        knob->onClick = [this, id]() {
+            if (detailedEditor_) {
+                removeChildComponent(detailedEditor_.get());
+                detailedEditor_.reset();
+            }
+            detailedEditor_ = std::make_unique<DetailedKnobEditor>(apvts_, id);
+            addAndMakeVisible(detailedEditor_.get());
+            detailedEditor_->setBounds(getLocalBounds());
+            detailedEditor_->toFront(true);
+        };
         
         return knob;
     };

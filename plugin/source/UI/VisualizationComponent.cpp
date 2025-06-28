@@ -288,19 +288,25 @@ void VisualizationComponent::updateParticles() {
     
     // Update existing particles
     for (auto& grain : grains) {
-        // Apply physics (gravity, velocity, etc.)
-        grain.velocityY += static_cast<float>(static_cast<double>(gravity) * deltaTime);
-        grain.x += static_cast<float>(static_cast<double>(grain.velocityX) * deltaTime);
+        // Uniform descent
         grain.y += static_cast<float>(static_cast<double>(grain.velocityY) * deltaTime);
         
-        // Apply damping
+        // Apply damping to horizontal velocity
         grain.velocityX *= 0.99f;
-        grain.velocityY *= 0.99f;
+        grain.x += static_cast<float>(static_cast<double>(grain.velocityX) * deltaTime);
         
-        // Calculate age-based properties
+        // Calculate age-based properties for pop animation
         float age = static_cast<float>((now - grain.startTime) / grain.maxAge);
-        grain.currentSize = grain.size * (1.0f - age * 0.5f); // Shrink over time
-        grain.currentAlpha = 1.0f - juce::jlimit(0.0f, 1.0f, age * 1.2f); // Fade out
+        float popThreshold = 0.8f; // Start popping when 80% of life is gone
+        
+        if (age < popThreshold) {
+            grain.currentSize = grain.size; // No size change until pop
+            grain.currentAlpha = 1.0f - juce::jlimit(0.0f, 1.0f, age * 0.5f); // Gradual fade
+        } else {
+            float popProgress = juce::jmap(age, popThreshold, 1.0f, 0.0f, 1.0f);
+            grain.currentSize = grain.size * (1.0f + popProgress * 0.5f); // Increase size by 50%
+            grain.currentAlpha = 1.0f - popProgress; // Fade out completely during pop
+        }
     }
     
     // Remove dead particles
@@ -314,6 +320,35 @@ void VisualizationComponent::updateParticles() {
     addNewGrains();
 }
 
+static juce::Colour getGrainColor(int sourceType, int sourceWaveform, float pitch, float velocity) {
+    float hue = 0.0f;
+    float saturation = 0.8f;
+    float brightness = 0.9f;
+
+    // Base color based on source type
+    if (sourceType == 0) { // Oscillator
+        switch (sourceWaveform) {
+            case 0: hue = 0.0f; break; // Sine (Red)
+            case 1: hue = 0.15f; break; // Saw (Orange)
+            case 2: hue = 0.3f; break; // Square (Yellow)
+            case 3: hue = 0.6f; break; // Noise (Blue)
+            default: hue = 0.0f; break;
+        }
+    } else { // Audio Sample
+        hue = 0.75f; // Purple for samples
+    }
+
+    // Adjust hue and saturation based on pitch and pan
+    // Pitch to hue (within a range around the base hue)
+    hue = juce::jmap(pitch, 0.0f, 127.0f, hue - 0.1f, hue + 0.1f); // Small variation around base hue
+    hue = fmod(hue + 1.0f, 1.0f); // Wrap around 0-1 range
+
+    // Velocity to saturation
+    saturation = juce::jmap(velocity, 0.0f, 1.0f, 0.5f, 1.0f);
+
+    return juce::Colour::fromHSV(hue, saturation, brightness, 1.0f);
+}
+
 void VisualizationComponent::addNewGrains() {
     int start1, size1, start2, size2;
     const double now = currentTimeSeconds();
@@ -325,13 +360,15 @@ void VisualizationComponent::addNewGrains() {
         const auto& info = buffer_[start1];
         
         VisualGrain grain;
+        grain.x = juce::jmap(info.pan, -1.0f, 1.0f, 0.0f, 1.0f); // Map pan to 0.0-1.0 for visualization
+        grain.y = 0.0f; // Start at the top
         grain.pitch = info.pitch;
         grain.size = 6.0f + info.velocity * 10.0f; // Size based on velocity
-        grain.velocityX = (rand() % 100 - 50) * 0.01f; // Random horizontal velocity
-        grain.velocityY = (rand() % 50) * -0.01f; // Upward velocity
+        grain.velocityX = (static_cast<float>(rand() % 100 - 50) * 0.0005f); // Very subtle random horizontal velocity
+        grain.velocityY = 0.5f; // Constant downward velocity for proportional travel
         grain.startTime = now;
-        grain.maxAge = static_cast<double>(info.durationSeconds) * 2.0; // Longer visual life
-        grain.colour = juce::Colour::fromHSV(info.pitch / 127.0f, 0.8f, 0.9f, 1.0f);
+        grain.maxAge = static_cast<double>(info.durationSeconds) * 2.0; // Visual life proportional to audio duration
+        grain.colour = getGrainColor(info.sourceType, info.sourceWaveform, info.pitch, info.velocity);
         grain.currentSize = grain.size;
         grain.currentAlpha = 1.0f;
         

@@ -47,6 +47,9 @@ private:
     std::unique_ptr<CustomKnob> filterCutoffKnob_;
     std::unique_ptr<CustomKnob> filterResonanceKnob_;
     std::unique_ptr<CustomKnob> filterEnvAmountKnob_;
+
+    std::unique_ptr<DetailedKnobEditor> detailedEditor_;
+    std::vector<std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>> attachments_;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthesisTab)
 };
