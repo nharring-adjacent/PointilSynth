@@ -251,7 +251,17 @@ private:
   std::atomic<float> midiTargetPitch_{60.0f};
   std::atomic<float> midiInfluence_{0.0f};
 
-  // Oscillator waveform selection for new grains
+  // Oscillator distribution weights
+  std::array<std::atomic<float>, 4> oscWeights_{{
+    {1.0f}, // Sine
+    {1.0f}, // Saw
+    {1.0f}, // Square
+    {1.0f}  // Noise
+  }};
+  std::discrete_distribution<int> oscDistribution_;
+  bool needsOscDistributionUpdate_{true};
+  
+  // Oscillator waveform selection for new grains (legacy, kept for backward compatibility)
   std::atomic<int> oscillatorWaveformSelection_{0}; // 0: Sine, 1: Saw, 2: Square, 3: Noise
 
   // Distributions - these should be updated when parameters change.
@@ -273,14 +283,43 @@ public:  // Public setter for sample rate, to be called by AudioEngine
   // Method to set MIDI influence
   void setMidiInfluence(int noteNumber, float influenceAmount);
 
-  // Method to set oscillator waveform selection
+  // Method to set oscillator waveform selection (legacy, for backward compatibility)
   void setOscillatorWaveformSelection(int waveformId) {
     oscillatorWaveformSelection_.store(waveformId);
+    // Set all weights to 0 and the selected waveform to 1
+    for (auto& weight : oscWeights_) {
+      weight.store(0.0f);
+    }
+    // Ensure waveformId is within bounds before using as array index
+    const size_t index = static_cast<size_t>(std::max(0, std::min(waveformId, 3)));
+    if (index < oscWeights_.size()) {
+      oscWeights_[index].store(1.0f);
+    }
+    needsOscDistributionUpdate_ = true;
   }
 
-  // Method to get oscillator waveform selection
+  // Method to get oscillator waveform selection (legacy, for backward compatibility)
   int getOscillatorWaveformSelection() const {
     return oscillatorWaveformSelection_.load();
+  }
+  
+  // Method to set oscillator distribution weights
+  void setOscillatorWeights(float sine, float saw, float square, float noise) {
+    oscWeights_[0].store(sine);
+    oscWeights_[1].store(saw);
+    oscWeights_[2].store(square);
+    oscWeights_[3].store(noise);
+    needsOscDistributionUpdate_ = true;
+  }
+  
+  // Method to get oscillator weights
+  std::array<float, 4> getOscillatorWeights() const {
+    return {
+      oscWeights_[0].load(),
+      oscWeights_[1].load(),
+      oscWeights_[2].load(),
+      oscWeights_[3].load()
+    };
   }
 };
 
@@ -297,9 +336,7 @@ class AudioEngine {
 public:
   enum class GrainSourceType { Oscillator, AudioSample };
 
-  explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {},
-                       juce::AbstractFifo* visFifo = nullptr,
-                       GrainInfoForVis* visBuffer = nullptr);
+  explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {});
 
   /** Called by the host to prepare the engine for playback. */
   void prepareToPlay(double sampleRate, int samplesPerBlock);
@@ -387,9 +424,6 @@ private:
   GrainEnvelope grainEnvelope_;
   std::atomic<GrainSourceType> currentSourceType_{GrainSourceType::Oscillator};
 
-  juce::AbstractFifo* visualizationFifo_;
-  GrainInfoForVis* visualizationBuffer_;
-  audio_plugin::VisualizationComponent* visualizationComponent_;
   InertialHistoryManager inertialHistoryManager_;
 
   // Audio parameters

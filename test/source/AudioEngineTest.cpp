@@ -13,7 +13,12 @@ TEST_CASE("AudioEngine: Silence") {
   if (auto* param = apvts.getParameter(ConfigManager::ParamID::density)) {
     param->setValueNotifyingHost(param->convertTo0to1(0.0f));
   }
+  
+  // Create AudioEngine without visualization component
   AudioEngine engine(cfg);
+  
+  // Ensure the engine is properly initialized
+  engine.initializeVisualization();
   engine.prepareToPlay(44100.0, 512);
   juce::AudioBuffer<float> buffer(2, 512);
   juce::MidiBuffer midi;

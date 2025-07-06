@@ -2,6 +2,7 @@
 #include "UI/CustomKnob.h"
 #include "UI/DetailedKnobEditor.h"
 #include <juce_audio_processors/juce_audio_processors.h>
+#include "UI/ProbabilityWaveComponent.h"
 
 namespace audio_plugin {
 
@@ -10,9 +11,14 @@ SynthesisTab::SynthesisTab(juce::AudioProcessorValueTreeState& apvts)
     
     // Setup sections
     addAndMakeVisible(grainControls_);
+    addAndMakeVisible(oscillatorControls_);
     addAndMakeVisible(envelopeControls_);
     addAndMakeVisible(pitchControls_);
     addAndMakeVisible(filterControls_);
+    
+    // Initialize the probability wave component
+    probabilityWaveComponent_ = std::make_unique<ProbabilityWaveComponent>(apvts_);
+    addAndMakeVisible(probabilityWaveComponent_.get());
     
     // Setup controls
     setupControls();
@@ -55,6 +61,7 @@ void SynthesisTab::paint(juce::Graphics& g) {
     };
     
     drawSectionBackground(grainControls_, "Grain");
+    drawSectionBackground(oscillatorControls_, "Oscillators");
     drawSectionBackground(envelopeControls_, "Envelope");
     drawSectionBackground(pitchControls_, "Pitch");
     drawSectionBackground(filterControls_, "Filter");
@@ -66,11 +73,26 @@ void SynthesisTab::resized() {
     const int sectionHeight = bounds.getHeight() / 2 - padding * 2;
     const int sectionWidth = bounds.getWidth() / 2 - padding * 2;
     
-    // Position sections
-    grainControls_.setBounds(0, 0, sectionWidth, sectionHeight);
-    envelopeControls_.setBounds(sectionWidth + padding * 2, 0, sectionWidth, sectionHeight);
-    pitchControls_.setBounds(0, sectionHeight + padding * 2, sectionWidth, sectionHeight);
-    filterControls_.setBounds(sectionWidth + padding * 2, sectionHeight + padding * 2, sectionWidth, sectionHeight);
+    // Position sections (3 columns layout)
+    const int sectionWidth3 = bounds.getWidth() / 3 - padding * 2;
+    
+    // First row
+    grainControls_.setBounds(0, 0, sectionWidth3, sectionHeight);
+    
+    // Oscillator controls take up the rest of the first row
+    oscillatorControls_.setBounds(sectionWidth3 + padding * 2, 0, 
+                                 bounds.getWidth() - (sectionWidth3 + padding * 2), sectionHeight);
+    
+    // Position the probability wave component to fill the oscillator controls area
+    if (probabilityWaveComponent_) {
+        auto oscBounds = oscillatorControls_.getBounds().reduced(4);
+        probabilityWaveComponent_->setBounds(oscBounds);
+    }
+    
+    // Second row
+    envelopeControls_.setBounds(0, sectionHeight + padding * 2, sectionWidth3, sectionHeight);
+    pitchControls_.setBounds(sectionWidth3 + padding * 2, sectionHeight + padding * 2, sectionWidth3, sectionHeight);
+    filterControls_.setBounds((sectionWidth3 + padding * 2) * 2, sectionHeight + padding * 2, sectionWidth3, sectionHeight);
     
     // Position controls within sections
     auto positionKnobs = [](juce::Component& parent, std::vector<CustomKnob*> knobs) {
@@ -87,6 +109,9 @@ void SynthesisTab::resized() {
     positionKnobs(envelopeControls_, {attackKnob_.get(), decayKnob_.get(), sustainKnob_.get(), releaseKnob_.get()});
     positionKnobs(pitchControls_, {transposeKnob_.get(), detuneKnob_.get(), randomPitchKnob_.get()});
     positionKnobs(filterControls_, {filterCutoffKnob_.get(), filterResonanceKnob_.get(), filterEnvAmountKnob_.get()});
+    
+    // Set up the oscillator controls layout
+    oscillatorControls_.setColour(juce::ResizableWindow::backgroundColourId, juce::Colours::transparentBlack);
 }
 
 void SynthesisTab::setupControls() {
@@ -122,6 +147,12 @@ void SynthesisTab::setupControls() {
     durationKnob_ = createKnob("DURATION", "Duration", 1.0f, 1000.0f, 100.0f, " ms");
     spreadKnob_ = createKnob("SPREAD", "Spread", 0.0f, 1.0f, 0.2f, " %");
     
+    // Oscillator Distribution Controls
+    oscDistSineKnob_ = createKnob("OSC_DIST_SINE", "Sine", 0.0f, 1.0f, 0.25f, "");
+    oscDistSawKnob_ = createKnob("OSC_DIST_SAW", "Saw", 0.0f, 1.0f, 0.25f, "");
+    oscDistSquareKnob_ = createKnob("OSC_DIST_SQUARE", "Square", 0.0f, 1.0f, 0.25f, "");
+    oscDistNoiseKnob_ = createKnob("OSC_DIST_NOISE", "Noise", 0.0f, 1.0f, 0.25f, "");
+    
     // Envelope Controls
     attackKnob_ = createKnob("ATTACK", "Attack", 0.0f, 5.0f, 0.1f, " s");
     decayKnob_ = createKnob("DECAY", "Decay", 0.0f, 5.0f, 0.3f, " s");
@@ -131,7 +162,7 @@ void SynthesisTab::setupControls() {
     // Pitch Controls
     transposeKnob_ = createKnob("TRANSPOSE", "Transpose", -24.0f, 24.0f, 0.0f, " st");
     detuneKnob_ = createKnob("DETUNE", "Detune", -50.0f, 50.0f, 0.0f, " ct");
-    randomPitchKnob_ = createKnob("RAND_PITCH", "Random", 0.0f, 1.0f, 0.1f, " st");
+    randomPitchKnob_ = createKnob("RAND_PITCH", "Random", 0.0f, 1.0f, 0.1f, "");
     
     // Filter Controls
     filterCutoffKnob_ = createKnob("FILTER_CUTOFF", "Cutoff", 20.0f, 20000.0f, 10000.0f, " Hz");
@@ -139,10 +170,6 @@ void SynthesisTab::setupControls() {
     filterEnvAmountKnob_ = createKnob("FILTER_ENV_AMT", "Env Amt", -1.0f, 1.0f, 0.0f, "");
     
     // Add controls to sections
-    for (auto* knob : {densityKnob_.get(), durationKnob_.get(), spreadKnob_.get()}) {
-        grainControls_.addAndMakeVisible(knob);
-    }
-    
     for (auto* knob : {attackKnob_.get(), decayKnob_.get(), sustainKnob_.get(), releaseKnob_.get()}) {
         envelopeControls_.addAndMakeVisible(knob);
     }

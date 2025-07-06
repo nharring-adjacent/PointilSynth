@@ -17,7 +17,7 @@ class VisualizationComponent : public juce::Component,
                               public juce::Timer,
                               private juce::OpenGLRenderer {
 public:
-    VisualizationComponent(juce::AbstractFifo& fifo, GrainInfoForVis* buffer);
+    explicit VisualizationComponent(juce::AudioProcessorValueTreeState& apvts);
     ~VisualizationComponent() override;
 
     void paint(juce::Graphics& g) override;
@@ -59,8 +59,19 @@ public:
     // Visual feedback
     void triggerVisualFeedback(int note, float velocity);
 
+    // Add grain info for visualization
+    void addGrainInfo(const GrainInfoForVis& info);
+
 private:
+    #if ! defined (JUCE_HEADLESS_TESTING)
     juce::OpenGLContext openGLContext;
+    #endif
+    
+    // OpenGL availability flag
+    bool openGLAvailable;
+    
+    // APVTS reference
+    juce::AudioProcessorValueTreeState& apvts_;
 
     struct VisualGrain {
         // Position and movement
@@ -92,7 +103,7 @@ private:
     void updateParticleBuffers();
     void renderParticles();
     void updateParticles();
-    void addNewGrains();
+    
     
     // OpenGL objects
     std::unique_ptr<juce::OpenGLShaderProgram> shaderProgram;
@@ -115,8 +126,6 @@ private:
     int trailLength{0};
     
     // Audio connection
-    juce::AbstractFifo& fifo_;
-    GrainInfoForVis* buffer_;
     const InertialHistoryManager* inertialHistoryManager_{nullptr};
     
     // Timing

@@ -203,42 +203,69 @@ const char* VisualizationComponent::fragmentShaderSource = R"(
     }
 )";
 
-VisualizationComponent::VisualizationComponent(juce::AbstractFifo& fifo,
-                                             GrainInfoForVis* buffer)
+VisualizationComponent::VisualizationComponent(juce::AudioProcessorValueTreeState& apvts)
     : juce::Component("VisualizationComponent"),
       juce::Timer(),
+#if ! defined (JUCE_HEADLESS_TESTING)
       openGLContext(),
+#endif
+      openGLAvailable(false),
+      apvts_(apvts),
       shaderProgram(),
       particleVBO(0),
       particleVAO(0),
       particleLock(),
       grains(),
-      fifo_(fifo),
-      buffer_(buffer),
       lastUpdateTime(juce::Time::getMillisecondCounterHiRes() / 1000.0) {
     setOpaque(true);
     setSize(800, 600);
     
-    // Initialize OpenGL
-    juce::OpenGLPixelFormat format;
-    openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::openGL3_2);
-    openGLContext.setPixelFormat(format);
-    openGLContext.setRenderer(this);
-    openGLContext.attachTo(*this);
-    openGLContext.setContinuousRepainting(true);
-    
-    startTimerHz(60); // 60 FPS for visual updates
+#if ! defined (JUCE_HEADLESS_TESTING)
+    // Try to initialize OpenGL with error handling
+    try {
+        juce::OpenGLPixelFormat format;
+        format.depthBufferBits = 24;
+        format.stencilBufferBits = 8;
+        format.multisamplingLevel = 4;
+        
+        openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::openGL3_2);
+        openGLContext.setPixelFormat(format);
+        openGLContext.setRenderer(this);
+        
+        // Try to attach OpenGL context
+        openGLContext.attachTo(*this);
+        
+        // Check if OpenGL context is properly attached
+        if (openGLContext.isAttached()) {
+            openGLContext.setContinuousRepainting(true);
+            openGLAvailable = true;
+            startTimerHz(60); // 60 FPS for visual updates
+        } else {
+            DBG("VisualizationComponent: Failed to attach OpenGL context, falling back to software rendering");
+            openGLAvailable = false;
+        }
+    } catch (...) {
+        DBG("VisualizationComponent: Exception during OpenGL initialization, falling back to software rendering");
+        openGLAvailable = false;
+    }
+#else
+    // In headless testing, always disable OpenGL
+    openGLAvailable = false;
+#endif
 }
 
 VisualizationComponent::~VisualizationComponent() {
     stopTimer();
     
-    // Release OpenGL resources
-    if (openGLContext.isAttached()) {
+#if ! defined (JUCE_HEADLESS_TESTING)
+    // Release OpenGL resources if available
+    if (openGLAvailable && openGLContext.isAttached()) {
         openGLContext.detach();
     }
+#endif
 }
 
+#if ! defined (JUCE_HEADLESS_TESTING)
 void VisualizationComponent::renderOpenGL() {
     jassert(juce::OpenGLHelpers::isContextActive());
     
@@ -264,7 +291,9 @@ void VisualizationComponent::renderOpenGL() {
     openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, 0);
     openGLContext.extensions.glBindBuffer(juce::gl::GL_ELEMENT_ARRAY_BUFFER, 0);
 }
+#endif
 
+#if ! defined (JUCE_HEADLESS_TESTING)
 void VisualizationComponent::openGLContextClosing() {
     // Release OpenGL resources
     if (particleVBO != 0) {
@@ -280,6 +309,7 @@ void VisualizationComponent::openGLContextClosing() {
     // Release shader program
     shaderProgram.reset();
 }
+#endif
 
 void VisualizationComponent::updateParticles() {
     const double now = currentTimeSeconds();
@@ -317,68 +347,31 @@ void VisualizationComponent::updateParticles() {
                grains.end());
     
     // Add new grains from audio thread
-    addNewGrains();
+    // addNewGrains(); // TODO: Implement this method
 }
 
-static juce::Colour getGrainColor(int sourceType, int sourceWaveform, float pitch, float velocity) {
-    float hue = 0.0f;
-    float saturation = 0.8f;
-    float brightness = 0.9f;
-
-    // Base color based on source type
-    if (sourceType == 0) { // Oscillator
-        switch (sourceWaveform) {
-            case 0: hue = 0.0f; break; // Sine (Red)
-            case 1: hue = 0.15f; break; // Saw (Orange)
-            case 2: hue = 0.3f; break; // Square (Yellow)
-            case 3: hue = 0.6f; break; // Noise (Blue)
-            default: hue = 0.0f; break;
-        }
-    } else { // Audio Sample
-        hue = 0.75f; // Purple for samples
-    }
-
-    // Adjust hue and saturation based on pitch and pan
-    // Pitch to hue (within a range around the base hue)
-    hue = juce::jmap(pitch, 0.0f, 127.0f, hue - 0.1f, hue + 0.1f); // Small variation around base hue
-    hue = fmod(hue + 1.0f, 1.0f); // Wrap around 0-1 range
-
-    // Velocity to saturation
-    saturation = juce::jmap(velocity, 0.0f, 1.0f, 0.5f, 1.0f);
-
-    return juce::Colour::fromHSV(hue, saturation, brightness, 1.0f);
-}
-
-void VisualizationComponent::addNewGrains() {
-    int start1, size1, start2, size2;
+void VisualizationComponent::addGrainInfo(const GrainInfoForVis& info) {
     const double now = currentTimeSeconds();
+
+    VisualGrain grain;
+    grain.x = juce::jmap(info.pan, -1.0f, 1.0f, 0.0f, 1.0f); // Map pan to 0.0-1.0 for visualization
+    grain.y = 0.0f; // Start at the top
+    grain.pitch = info.pitch;
+    grain.size = 6.0f + info.velocity * 10.0f; // Size based on velocity
+    grain.velocityX = (static_cast<float>(rand() % 100 - 50) * 0.0005f); // Very subtle random horizontal velocity
+    grain.velocityY = 0.5f; // Constant downward velocity for proportional travel
+    grain.startTime = now;
+    grain.maxAge = static_cast<double>(info.durationSeconds) * 2.0; // Visual life proportional to audio duration
+    grain.colour = getColorForPitch(info.pitch, info.velocity); // Use existing color function
+    grain.currentSize = grain.size;
+    grain.currentAlpha = 1.0f;
     
-    while (true) {
-        fifo_.prepareToRead(1, start1, size1, start2, size2);
-        if (size1 == 0) break;
-        
-        const auto& info = buffer_[start1];
-        
-        VisualGrain grain;
-        grain.x = juce::jmap(info.pan, -1.0f, 1.0f, 0.0f, 1.0f); // Map pan to 0.0-1.0 for visualization
-        grain.y = 0.0f; // Start at the top
-        grain.pitch = info.pitch;
-        grain.size = 6.0f + info.velocity * 10.0f; // Size based on velocity
-        grain.velocityX = (static_cast<float>(rand() % 100 - 50) * 0.0005f); // Very subtle random horizontal velocity
-        grain.velocityY = 0.5f; // Constant downward velocity for proportional travel
-        grain.startTime = now;
-        grain.maxAge = static_cast<double>(info.durationSeconds) * 2.0; // Visual life proportional to audio duration
-        grain.colour = getGrainColor(info.sourceType, info.sourceWaveform, info.pitch, info.velocity);
-        grain.currentSize = grain.size;
-        grain.currentAlpha = 1.0f;
-        
-        // Add to particles with thread safety
-        const juce::CriticalSection::ScopedLockType lock(particleLock);
-        grains.push_back(grain);
-        
-        fifo_.finishedRead(size1);
-    }
+    // Add to particles with thread safety
+    const juce::CriticalSection::ScopedLockType lock(particleLock);
+    grains.push_back(grain);
 }
+
+
 
 void VisualizationComponent::renderParticles() {
     if (!shaderProgram) {
@@ -420,29 +413,70 @@ void VisualizationComponent::renderParticles() {
 }
 
 void VisualizationComponent::resized() {
+#if ! defined (JUCE_HEADLESS_TESTING)
     // Update OpenGL viewport when component is resized
-    if (openGLContext.isAttached()) {
+    if (openGLAvailable && openGLContext.isAttached()) {
         // No need to call updateEmbeddedPosition; OpenGL viewport will be updated automatically in renderOpenGL
     }
+#endif
+    // In software mode, no special handling needed - repaint will handle new size
 }
 
 void VisualizationComponent::timerCallback() {
-    // Request a repaint which will trigger renderOpenGL()
     if (isVisible()) {
-        openGLContext.triggerRepaint();
+        if (openGLAvailable) {
+#if ! defined (JUCE_HEADLESS_TESTING)
+            // Update particles and request OpenGL repaint
+            updateParticles();
+            openGLContext.triggerRepaint();
+#endif
+        } else {
+            // In software mode, update particles and request normal repaint
+            updateParticles();
+            repaint();
+        }
     }
 }
 
 void VisualizationComponent::paint(juce::Graphics& g)
 {
-    // Draw JUCE-based overlays (meters, feedback, etc.)
+    // When OpenGL is not available, provide software rendering fallback
+    if (!openGLAvailable) {
+        // Fill background
+        g.fillAll(juce::Colour(0xff1a1a1a));
+        
+        // Draw particles using software rendering
+        const juce::CriticalSection::ScopedLockType lock(particleLock);
+        for (const auto& grain : grains) {
+            // Convert normalized coordinates to screen coordinates
+            float x = juce::jmap(grain.x, -1.0f, 1.0f, 0.0f, static_cast<float>(getWidth()));
+            float y = juce::jmap(grain.y, 0.0f, 1.0f, static_cast<float>(getHeight()), 0.0f);
+            
+            // Set color and alpha
+            g.setColour(grain.colour.withAlpha(grain.currentAlpha));
+            
+            // Draw particle as a circle
+            float radius = grain.currentSize * 0.5f;
+            g.fillEllipse(x - radius, y - radius, grain.currentSize, grain.currentSize);
+        }
+        
+        // Draw a simple message indicating software mode
+        g.setColour(juce::Colours::white.withAlpha(0.3f));
+        g.setFont(12.0f);
+        g.drawText("Software Rendering", getLocalBounds().removeFromBottom(20), 
+                   juce::Justification::centredRight, true);
+    }
+    
+    // Always draw JUCE-based overlays (meters, feedback, etc.)
     drawVisualFeedbacks(g);
     drawMeters(g);
-    // Optionally: draw other overlays or debug info here
 }
 
+#if ! defined (JUCE_HEADLESS_TESTING)
 void VisualizationComponent::newOpenGLContextCreated()
 {
+    if (!openGLAvailable) return;
+    
     // Initialize OpenGL resources (shaders, buffers, etc.)
     initializeShaders();
     // Create VBO/VAO if not already created
@@ -455,6 +489,28 @@ void VisualizationComponent::newOpenGLContextCreated()
         openGLContext.extensions.glGenVertexArrays(1, &particleVAO);
     }
 }
+
+void VisualizationComponent::openGLContextClosing()
+{
+    if (!openGLAvailable) return;
+    
+    // Clean up OpenGL resources
+    if (particleVBO != 0) {
+        openGLContext.extensions.glDeleteBuffers(1, &particleVBO);
+        particleVBO = 0;
+    }
+    if (particleVAO != 0) {
+        openGLContext.extensions.glDeleteVertexArrays(1, &particleVAO);
+        particleVAO = 0;
+    }
+    shaderProgram.reset();
+}
+#else
+// Headless implementations - do nothing
+void VisualizationComponent::newOpenGLContextCreated() {}
+void VisualizationComponent::renderOpenGL() {}
+void VisualizationComponent::openGLContextClosing() {}
+#endif
 
 void VisualizationComponent::drawMeters(juce::Graphics& g) {
     if (!showMeters_) return;

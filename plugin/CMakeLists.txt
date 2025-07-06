@@ -54,6 +54,7 @@ set(SOURCE_FILES
     source/UI/PresetBrowserComponent.cpp
     source/UI/VisualizationComponent.cpp
     source/UI/InertialHistoryVisualizer.cpp
+    source/UI/ProbabilityWaveComponent.cpp
     source/PodComponent.cpp
     source/StochasticModel.cpp
 )
@@ -73,6 +74,7 @@ set(HEADER_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/PresetBrowserComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/VisualizationComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/InertialHistoryVisualizer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/UI/ProbabilityWaveComponent.h
     ${CMAKE_CURRENT_SOURCE_DIR}/include/PodComponent.h
 )
 target_sources(${PROJECT_NAME} PRIVATE ${SOURCE_FILES} ${HEADER_FILES})

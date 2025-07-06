@@ -18,6 +18,12 @@ public:
     static constexpr const char* panSpread = "panSpread";
     static constexpr const char* density = "density";
     static constexpr const char* temporalDistribution = "temporalDistribution";
+    
+    // Oscillator distribution parameters
+    static constexpr const char* oscDistSine = "oscDistSine";
+    static constexpr const char* oscDistSaw = "oscDistSaw";
+    static constexpr const char* oscDistSquare = "oscDistSquare";
+    static constexpr const char* oscDistNoise = "oscDistNoise";
   };
 
   using Callback = std::function<void(float)>;

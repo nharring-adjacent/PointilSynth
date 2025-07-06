@@ -48,10 +48,12 @@ include(CTest)
 include(Catch)
 
 set(TEST_SOURCE_FILES
+    source/ProbabilityWaveComponentTest.cpp
     source/DebugUIPanelTest.cpp
     source/GrainEnvelopeTest.cpp
     source/StandaloneGrainEnvelopeTest.cpp
     source/OscillatorTest.cpp
+    source/OscillatorDistributionTest.cpp
     source/AudioEngineTest.cpp
     source/PluginEditorTest.cpp
     source/PluginProcessorTest.cpp

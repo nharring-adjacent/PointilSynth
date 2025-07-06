@@ -2,6 +2,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "UI/CustomKnob.h"
+#include "UI/ProbabilityWaveComponent.h"
 
 namespace audio_plugin {
 
@@ -31,6 +32,10 @@ private:
     std::unique_ptr<CustomKnob> densityKnob_;
     std::unique_ptr<CustomKnob> durationKnob_;
     std::unique_ptr<CustomKnob> spreadKnob_;
+    
+    // Oscillator Controls
+    juce::Component oscillatorControls_;
+    std::unique_ptr<ProbabilityWaveComponent> probabilityWaveComponent_;
     
     // Envelope Controls
     std::unique_ptr<CustomKnob> attackKnob_;

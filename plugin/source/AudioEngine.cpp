@@ -9,22 +9,16 @@
 #include "Pointilsynth/Resampler.h"  // For Resampler::getSample
 #include "UI/VisualizationComponent.h"  // For VisualizationComponent definition
 
-AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg,
-                         juce::AbstractFifo* visFifo,
-                         GrainInfoForVis* visBuffer)
-    : stochasticModel(std::move(cfg)),
-      config_(std::move(cfg)),
-      visualizationFifo_(visFifo),
-      visualizationBuffer_(visBuffer) {
-    // Visualization component initialization moved to initializeVisualization()
+AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg)
+    : stochasticModel(cfg),
+      config_(cfg)
+{
+    // Initialize without visualization component for now
 }
 
 void AudioEngine::initializeVisualization() {
-    // Initialize the visualization component if needed
-    if (visualizationComponent_) {
-        visualizationComponent_->setInertialHistoryManager(&inertialHistoryManager_);
-        visualizationComponent_->setVisualPreset(audio_plugin::VisualizationComponent::VisualPreset::Default);
-    }
+    // Visualization initialization placeholder
+    // TODO: Add visualization component support back later
 }
 
 void AudioEngine::prepareToPlay(double sampleRate, int /*samplesPerBlock*/) {
@@ -59,40 +53,13 @@ void AudioEngine::triggerNewGrain() {
 
   grains.push_back(std::move(newGrain));
 
-  if (visualizationFifo_ && visualizationBuffer_) {
-    int start1, size1, start2, size2;
-    visualizationFifo_->prepareToWrite(1, start1, size1, start2, size2);
-    if (size1 > 0)
-      visualizationBuffer_[start1] = {
-          newGrain.pan, newGrain.pitch, newGrain.amplitude,
-          static_cast<float>(newGrain.durationInSamples / currentSampleRate),
-          static_cast<int>(currentSourceType_.load()),
-          static_cast<int>(newGrain.oscillator.getWaveform())};
-    visualizationFifo_->finishedWrite(size1);
-  }
+  // TODO: Add visualization grain info when visualization component is available
 }
 
 void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,
                                juce::MidiBuffer& midiMessages,
                                const juce::AudioPlayHead::PositionInfo& pos) {
-    // Update visualization component if available
-    if (visualizationComponent_) {
-        // Calculate RMS for metering
-        float leftRms = buffer.getRMSLevel(0, 0, buffer.getNumSamples());
-        float rightRms = buffer.getNumChannels() > 1 ? 
-                        buffer.getRMSLevel(1, 0, buffer.getNumSamples()) : leftRms;
-        
-        visualizationComponent_->setMeterValues(leftRms, rightRms);
-        
-        // Trigger visual feedback for new notes
-        for (const auto metadata : midiMessages) {
-            const auto& msg = metadata.getMessage();
-            if (msg.isNoteOn()) {
-                float velocity = msg.getFloatVelocity();
-                visualizationComponent_->triggerVisualFeedback(msg.getNoteNumber(), velocity);
-            }
-        }
-    }
+    // TODO: Add visualization update when visualization component is available
     
     // Update inertial history with current position
     currentPpq = pos.getPpqPosition().orFallback(0.0);
