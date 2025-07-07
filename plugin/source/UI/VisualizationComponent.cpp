@@ -293,23 +293,6 @@ void VisualizationComponent::renderOpenGL() {
 }
 #endif
 
-#if ! defined (JUCE_HEADLESS_TESTING)
-void VisualizationComponent::openGLContextClosing() {
-    // Release OpenGL resources
-    if (particleVBO != 0) {
-        openGLContext.extensions.glDeleteBuffers(1, &particleVBO);
-        particleVBO = 0;
-    }
-    
-    if (particleVAO != 0) {
-        openGLContext.extensions.glDeleteVertexArrays(1, &particleVAO);
-        particleVAO = 0;
-    }
-    
-    // Release shader program
-    shaderProgram.reset();
-}
-#endif
 
 void VisualizationComponent::updateParticles() {
     const double now = currentTimeSeconds();
@@ -492,6 +475,7 @@ void VisualizationComponent::newOpenGLContextCreated()
 
 void VisualizationComponent::openGLContextClosing()
 {
+#if ! defined (JUCE_HEADLESS_TESTING)
     if (!openGLAvailable) return;
     
     // Clean up OpenGL resources
@@ -504,12 +488,12 @@ void VisualizationComponent::openGLContextClosing()
         particleVAO = 0;
     }
     shaderProgram.reset();
+#endif
 }
 #else
 // Headless implementations - do nothing
 void VisualizationComponent::newOpenGLContextCreated() {}
 void VisualizationComponent::renderOpenGL() {}
-void VisualizationComponent::openGLContextClosing() {}
 #endif
 
 void VisualizationComponent::drawMeters(juce::Graphics& g) {

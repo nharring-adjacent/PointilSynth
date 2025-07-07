@@ -5,6 +5,7 @@
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 
 using namespace juce;
 using Catch::Matchers::WithinAbs;
@@ -29,8 +30,29 @@ public:
     }
 };
 
+class MockAudioProcessor : public juce::AudioProcessor {
+public:
+    MockAudioProcessor() : AudioProcessor(juce::AudioProcessor::BusesProperties()) {}
+    const juce::String getName() const override { return "MockProcessor"; }
+    void prepareToPlay(double, int) override {}
+    void releaseResources() override {}
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override {}
+    double getTailLengthSeconds() const override { return 0.0; }
+    bool acceptsMidi() const override { return true; }
+    bool producesMidi() const override { return false; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    bool hasEditor() const override { return false; }
+    int getNumPrograms() override { return 1; }
+    int getCurrentProgram() override { return 0; }
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return {}; }
+    void changeProgramName(int, const juce::String&) override {}
+    void getStateInformation(juce::MemoryBlock&) override {}
+    void setStateInformation(const void*, int) override {}
+};
+
 struct VisualizationComponentTestFixture {
-    VisualizationComponentTestFixture() {
+    VisualizationComponentTestFixture() : apvts(mockProcessor, nullptr, "TestAPVTS", {}) {
         // Initialize OpenGL for testing
         openGLContext.attachTo(*component);
     }
@@ -40,26 +62,23 @@ struct VisualizationComponentTestFixture {
     }
     
     ScopedJuceInitialiser_GUI libraryInitialiser;
+    MockAudioProcessor mockProcessor;
+    juce::AudioProcessorValueTreeState apvts;
     juce::AbstractFifo fifo{8};
     std::array<GrainInfoForVis, 8> buffer{};
     TestInertialHistoryManager historyManager;
     juce::AudioDeviceManager deviceManager;
-    std::unique_ptr<VisualizationComponent> component{std::make_unique<VisualizationComponent>(fifo, buffer.data())};
+    std::unique_ptr<VisualizationComponent> component{std::make_unique<VisualizationComponent>(apvts)};
     juce::OpenGLContext openGLContext;
     juce::CriticalSection lock;
     
     void simulateGrain(int note, float pan, float pitch, float age = 0.0f) {
         GrainInfoForVis grain{};
-grain.pitch = note;
+        grain.pitch = note;
         grain.pan = pan;
-        grain.pitch = pitch;
-grain.velocity = age;
+        grain.velocity = age;
         
-        int start1, size1, start2, size2;
-        fifo.prepareToWrite(1, start1, size1, start2, size2);
-        if (size1 > 0) buffer[start1] = grain;
-        if (size2 > 0) buffer[start2] = grain;
-        fifo.finishedWrite(size1 + size2);
+        component->addGrainInfo(grain);
     }
 };
 

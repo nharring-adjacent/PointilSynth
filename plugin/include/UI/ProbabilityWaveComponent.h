@@ -111,6 +111,12 @@ private:
     void commitProbabilitiesToParameters();
 
     /**
+     * Normalize probabilities to sum to 1.0 and update APVTS parameters
+     * @param changedIndex Index of the parameter that was changed (-1 for general normalization)
+     */
+    void normalizeAndUpdateParameters(int changedIndex = -1);
+
+    /**
      * Get the wave height at a specific x position by interpolating control points
      */
     float getHeightAtPosition(float x);

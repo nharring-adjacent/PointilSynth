@@ -214,16 +214,24 @@ void ProbabilityWaveComponent::parameterChanged(const juce::String& parameterID,
         return;
     }
     
-    // Update the corresponding oscillator section's probability
+    // Store which parameter was changed for intelligent normalization
+    int changedIndex = -1;
     if (parameterID == ConfigManager::ParamID::oscDistSine) {
         oscillatorSections[0].probability = newValue;
+        changedIndex = 0;
     } else if (parameterID == ConfigManager::ParamID::oscDistSaw) {
         oscillatorSections[1].probability = newValue;
+        changedIndex = 1;
     } else if (parameterID == ConfigManager::ParamID::oscDistSquare) {
         oscillatorSections[2].probability = newValue;
+        changedIndex = 2;
     } else if (parameterID == ConfigManager::ParamID::oscDistNoise) {
         oscillatorSections[3].probability = newValue;
+        changedIndex = 3;
     }
+    
+    // Apply normalization to ensure parameters always sum to 1.0
+    normalizeAndUpdateParameters(changedIndex);
     
     // Update control points to reflect the new probabilities
     updateControlPointsFromProbabilities();
@@ -463,10 +471,136 @@ void ProbabilityWaveComponent::commitProbabilitiesToParameters()
         return;
     }
 
-    sineParam->setValueNotifyingHost(oscillatorSections[0].probability);
-    sawParam->setValueNotifyingHost(oscillatorSections[1].probability);
-    squareParam->setValueNotifyingHost(oscillatorSections[2].probability);
-    noiseParam->setValueNotifyingHost(oscillatorSections[3].probability);
+    sineParam->setValueNotifyingHost(sineParam->convertTo0to1(oscillatorSections[0].probability));
+    sawParam->setValueNotifyingHost(sawParam->convertTo0to1(oscillatorSections[1].probability));
+    squareParam->setValueNotifyingHost(squareParam->convertTo0to1(oscillatorSections[2].probability));
+    noiseParam->setValueNotifyingHost(noiseParam->convertTo0to1(oscillatorSections[3].probability));
+}
+
+void ProbabilityWaveComponent::normalizeAndUpdateParameters(int changedIndex)
+{
+    // Calculate current total
+    float total = 0.0f;
+    for (const auto& section : oscillatorSections) {
+        total += section.probability;
+    }
+    
+    // Handle edge cases
+    if (total <= 0.0f) {
+        // All parameters are zero - set equal distribution
+        for (auto& section : oscillatorSections) {
+            section.probability = 0.25f;
+        }
+    } else if (changedIndex >= 0 && changedIndex < static_cast<int>(oscillatorSections.size())) {
+        // A specific parameter was changed - use intelligent normalization
+        size_t idx = static_cast<size_t>(changedIndex);
+        float changedValue = oscillatorSections[idx].probability;
+        
+        if (changedValue >= 0.99f) {
+            // User set a parameter to maximum - make it dominant
+            for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                if (i == idx) {
+                    oscillatorSections[i].probability = 1.0f;
+                } else {
+                    oscillatorSections[i].probability = 0.0f;
+                }
+            }
+        } else if (changedValue <= 0.01f) {
+            // User set a parameter to minimum - redistribute among others
+            oscillatorSections[idx].probability = 0.0f;
+            int activeCount = 0;
+            
+            // Count how many other parameters are non-zero
+            for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                if (i != idx && oscillatorSections[i].probability > 0.01f) {
+                    activeCount++;
+                }
+            }
+            
+            if (activeCount == 0) {
+                // No other active parameters, distribute equally among others
+                float equalShare = 1.0f / (oscillatorSections.size() - 1);
+                for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                    if (i != idx) {
+                        oscillatorSections[i].probability = equalShare;
+                    }
+                }
+            } else {
+                // Normalize the remaining parameters to sum to 1.0
+                float otherTotal = 0.0f;
+                for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                    if (i != idx) {
+                        otherTotal += oscillatorSections[i].probability;
+                    }
+                }
+                if (otherTotal > 0.0f) {
+                    for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                        if (i != idx) {
+                            oscillatorSections[i].probability = (oscillatorSections[i].probability / otherTotal);
+                        }
+                    }
+                }
+            }
+        } else {
+            // User set a parameter to an intermediate value - adjust others proportionally
+            float desiredValue = changedValue;
+            float remaining = 1.0f - desiredValue;
+            float otherTotal = 0.0f;
+            
+            // Calculate total of other parameters
+            for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                if (i != idx) {
+                    otherTotal += oscillatorSections[i].probability;
+                }
+            }
+            
+            // Set the changed parameter to the desired value
+            oscillatorSections[idx].probability = desiredValue;
+            
+            // Distribute the remaining probability proportionally among others
+            if (otherTotal > 0.0f) {
+                for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                    if (i != idx) {
+                        oscillatorSections[i].probability = (oscillatorSections[i].probability / otherTotal) * remaining;
+                    }
+                }
+            } else {
+                // Other parameters were zero, distribute equally
+                float equalShare = remaining / (oscillatorSections.size() - 1);
+                for (size_t i = 0; i < oscillatorSections.size(); ++i) {
+                    if (i != idx) {
+                        oscillatorSections[i].probability = equalShare;
+                    }
+                }
+            }
+        }
+    } else {
+        // General normalization (no specific parameter changed)
+        if (std::abs(total - 1.0f) > 0.0001f) {
+            // Normalize to sum to 1.0
+            for (auto& section : oscillatorSections) {
+                section.probability /= total;
+            }
+        }
+    }
+    
+    // Update the APVTS parameters with normalized values
+    // Temporarily suppress parameter change notifications to avoid recursion
+    suppressParameterUpdates = true;
+    
+    auto* sineParam = apvts.getParameter(ConfigManager::ParamID::oscDistSine);
+    auto* sawParam = apvts.getParameter(ConfigManager::ParamID::oscDistSaw);
+    auto* squareParam = apvts.getParameter(ConfigManager::ParamID::oscDistSquare);
+    auto* noiseParam = apvts.getParameter(ConfigManager::ParamID::oscDistNoise);
+
+    if (sineParam && sawParam && squareParam && noiseParam) {
+        sineParam->setValueNotifyingHost(sineParam->convertTo0to1(oscillatorSections[0].probability));
+        sawParam->setValueNotifyingHost(sawParam->convertTo0to1(oscillatorSections[1].probability));
+        squareParam->setValueNotifyingHost(squareParam->convertTo0to1(oscillatorSections[2].probability));
+        noiseParam->setValueNotifyingHost(noiseParam->convertTo0to1(oscillatorSections[3].probability));
+    }
+    
+    suppressParameterUpdates = false;
 }
 
 float ProbabilityWaveComponent::getHeightAtPosition(float x)

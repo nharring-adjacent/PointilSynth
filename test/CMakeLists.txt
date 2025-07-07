@@ -80,6 +80,10 @@ juce_add_console_app(
   juce_audio_basics
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE JUCE_HEADLESS_TESTING=1)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE JUCE_HEADLESS_TESTING=1)
+
 target_link_libraries(
   ${PROJECT_NAME}
   PUBLIC juce::juce_recommended_config_flags
