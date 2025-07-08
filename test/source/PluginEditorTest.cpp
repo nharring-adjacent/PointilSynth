@@ -14,8 +14,6 @@ struct JuceGuiTestFixture {
 class PluginEditorTest : public JuceGuiTestFixture {
 protected:
   AudioPluginAudioProcessor processor;  // Create a processor instance
-  juce::AbstractFifo fifo{8};
-  std::array<GrainInfoForVis, 8> buffer{};
 
 public:
   PluginEditorTest() = default;  // processor is default constructed
@@ -23,6 +21,6 @@ public:
 
 TEST_CASE_METHOD(PluginEditorTest, "CanConstruct", "[PluginEditorTest]") {
   REQUIRE_NOTHROW(std::make_unique<PointillisticSynthAudioProcessorEditor>(
-      processor, fifo, buffer.data()));
+      processor));
 }
 }  // namespace audio_plugin

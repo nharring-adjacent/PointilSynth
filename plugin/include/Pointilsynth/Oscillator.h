@@ -119,6 +119,8 @@ public:
         }
     }
 
+    Waveform getWaveform() const { return currentWaveform; }
+
 private:
     juce::dsp::Oscillator<float> osc;
     Waveform currentWaveform;

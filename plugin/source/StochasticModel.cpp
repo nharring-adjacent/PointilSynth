@@ -27,6 +27,31 @@ StochasticModel::StochasticModel(std::shared_ptr<ConfigManager> cfg)
           globalTemporalDistribution_ =
               static_cast<TemporalDistribution>(static_cast<int>(v));
         });
+    
+    // Add listeners for oscillator distribution parameters
+    config_->addListener(ConfigManager::ParamID::oscDistSine, [this](float v) {
+      oscWeights_[0].store(v);
+      needsOscDistributionUpdate_ = true;
+    });
+    config_->addListener(ConfigManager::ParamID::oscDistSaw, [this](float v) {
+      oscWeights_[1].store(v);
+      needsOscDistributionUpdate_ = true;
+    });
+    config_->addListener(ConfigManager::ParamID::oscDistSquare, [this](float v) {
+      oscWeights_[2].store(v);
+      needsOscDistributionUpdate_ = true;
+    });
+    config_->addListener(ConfigManager::ParamID::oscDistNoise, [this](float v) {
+      oscWeights_[3].store(v);
+      needsOscDistributionUpdate_ = true;
+    });
+    
+    // Initialize oscillator weights from config
+    oscWeights_[0].store(config_->getAPVTS().getRawParameterValue(ConfigManager::ParamID::oscDistSine)->load());
+    oscWeights_[1].store(config_->getAPVTS().getRawParameterValue(ConfigManager::ParamID::oscDistSaw)->load());
+    oscWeights_[2].store(config_->getAPVTS().getRawParameterValue(ConfigManager::ParamID::oscDistSquare)->load());
+    oscWeights_[3].store(config_->getAPVTS().getRawParameterValue(ConfigManager::ParamID::oscDistNoise)->load());
+    needsOscDistributionUpdate_ = true;
   }
 }
 
@@ -110,6 +135,33 @@ void StochasticModel::generateNewGrain(Grain& newGrain) {
   // Set a default amplitude so grains are audible. This could be
   // parameterized in a future update.
   newGrain.amplitude = 0.2f;
+
+  // Update oscillator distribution if needed
+  if (needsOscDistributionUpdate_) {
+    std::array<float, 4> weights = {
+      oscWeights_[0].load(),
+      oscWeights_[1].load(),
+      oscWeights_[2].load(),
+      oscWeights_[3].load()
+    };
+    
+    // If all weights are zero, fall back to equal distribution
+    float sum = std::accumulate(weights.begin(), weights.end(), 0.0f);
+    if (sum <= 0.0f) {
+      std::fill(weights.begin(), weights.end(), 1.0f);
+    }
+    
+    // Update the distribution
+    oscDistribution_ = std::discrete_distribution<int>(weights.begin(), weights.end());
+    needsOscDistributionUpdate_ = false;
+  }
+  
+  // Select oscillator type based on distribution
+  int selectedWaveform = oscDistribution_(randomEngine);
+  
+  // Set oscillator waveform for the new grain
+  newGrain.oscillator.setWaveform(static_cast<Pointilsynth::Oscillator::Waveform>(selectedWaveform));
+  newGrain.oscillator.setFrequency(static_cast<float>(juce::MidiMessage::getMidiNoteInHertz(static_cast<int>(newGrain.pitch))));
 
   // Start reading from the beginning of the source sample when applicable.
   newGrain.sourceSamplePosition = 0.0;

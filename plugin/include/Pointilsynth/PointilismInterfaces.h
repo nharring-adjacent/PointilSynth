@@ -5,6 +5,11 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
+// Forward declarations
+namespace audio_plugin {
+    class VisualizationComponent;
+}
+
 #include "Oscillator.h"
 #include "GrainEnvelope.h"
 #include "InertialHistoryManager.h"
@@ -23,6 +28,41 @@
  * collection of these.
  */
 struct Grain {
+  // Default constructor
+  Grain() = default;
+
+  // Delete copy constructor and copy assignment operator
+  Grain(const Grain&) = delete;
+  Grain& operator=(const Grain&) = delete;
+
+  // Define move constructor
+  Grain(Grain&& other) noexcept
+      : isAlive(other.isAlive),
+        id(other.id),
+        pitch(other.pitch),
+        pan(other.pan),
+        amplitude(other.amplitude),
+        durationInSamples(other.durationInSamples),
+        ageInSamples(other.ageInSamples),
+        sourceSamplePosition(other.sourceSamplePosition),
+        oscillator(std::move(other.oscillator)) {}
+
+  // Define move assignment operator
+  Grain& operator=(Grain&& other) noexcept {
+    if (this != &other) {
+      isAlive = other.isAlive;
+      id = other.id;
+      pitch = other.pitch;
+      pan = other.pan;
+      amplitude = other.amplitude;
+      durationInSamples = other.durationInSamples;
+      ageInSamples = other.ageInSamples;
+      sourceSamplePosition = other.sourceSamplePosition;
+      oscillator = std::move(other.oscillator);
+    }
+    return *this;
+  }
+
   bool isAlive = true;  // Flag to mark for cleanup when the grain is finished.
   int id = 0;           // Unique identifier for visualization purposes.
 
@@ -36,6 +76,9 @@ struct Grain {
   int ageInSamples = 0;  // How many samples this grain has been playing.
   double sourceSamplePosition =
       0.0;  // The starting position within the source audio file.
+
+  // Per-grain oscillator
+  Pointilsynth::Oscillator oscillator;
 };
 
 /**
@@ -45,7 +88,10 @@ struct Grain {
 struct GrainInfoForVis {
   float pan{};
   float pitch{};
+  float velocity{};
   float durationSeconds{};
+  int sourceType{}; // 0: Oscillator, 1: AudioSample
+  int sourceWaveform{}; // For oscillator: 0: Sine, 1: Saw, 2: Square, 3: Noise
 };
 
 /**
@@ -205,6 +251,19 @@ private:
   std::atomic<float> midiTargetPitch_{60.0f};
   std::atomic<float> midiInfluence_{0.0f};
 
+  // Oscillator distribution weights
+  std::array<std::atomic<float>, 4> oscWeights_{{
+    {1.0f}, // Sine
+    {1.0f}, // Saw
+    {1.0f}, // Square
+    {1.0f}  // Noise
+  }};
+  std::discrete_distribution<int> oscDistribution_;
+  bool needsOscDistributionUpdate_{true};
+  
+  // Oscillator waveform selection for new grains (legacy, kept for backward compatibility)
+  std::atomic<int> oscillatorWaveformSelection_{0}; // 0: Sine, 1: Saw, 2: Square, 3: Noise
+
   // Distributions - these should be updated when parameters change.
   // For simplicity, the setters currently just store values. A more complete
   // implementation would update these distributions in the setters.
@@ -223,6 +282,45 @@ public:  // Public setter for sample rate, to be called by AudioEngine
 
   // Method to set MIDI influence
   void setMidiInfluence(int noteNumber, float influenceAmount);
+
+  // Method to set oscillator waveform selection (legacy, for backward compatibility)
+  void setOscillatorWaveformSelection(int waveformId) {
+    oscillatorWaveformSelection_.store(waveformId);
+    // Set all weights to 0 and the selected waveform to 1
+    for (auto& weight : oscWeights_) {
+      weight.store(0.0f);
+    }
+    // Ensure waveformId is within bounds before using as array index
+    const size_t index = static_cast<size_t>(std::max(0, std::min(waveformId, 3)));
+    if (index < oscWeights_.size()) {
+      oscWeights_[index].store(1.0f);
+    }
+    needsOscDistributionUpdate_ = true;
+  }
+
+  // Method to get oscillator waveform selection (legacy, for backward compatibility)
+  int getOscillatorWaveformSelection() const {
+    return oscillatorWaveformSelection_.load();
+  }
+  
+  // Method to set oscillator distribution weights
+  void setOscillatorWeights(float sine, float saw, float square, float noise) {
+    oscWeights_[0].store(sine);
+    oscWeights_[1].store(saw);
+    oscWeights_[2].store(square);
+    oscWeights_[3].store(noise);
+    needsOscDistributionUpdate_ = true;
+  }
+  
+  // Method to get oscillator weights
+  std::array<float, 4> getOscillatorWeights() const {
+    return {
+      oscWeights_[0].load(),
+      oscWeights_[1].load(),
+      oscWeights_[2].load(),
+      oscWeights_[3].load()
+    };
+  }
 };
 
 /**
@@ -238,9 +336,10 @@ class AudioEngine {
 public:
   enum class GrainSourceType { Oscillator, AudioSample };
 
-  explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {},
-                       juce::AbstractFifo* visFifo = nullptr,
-                       GrainInfoForVis* visBuffer = nullptr);
+  explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {});
+  
+  /** Set up visualization FIFO for grain data */
+  void setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer);
 
   /** Called by the host to prepare the engine for playback. */
   void prepareToPlay(double sampleRate, int samplesPerBlock);
@@ -257,13 +356,54 @@ public:
   void loadAudioSample(const juce::File& audioFile);
 
   /** Selects an internal waveform to be used as a grain source. */
-  void setGrainSource(int internalWaveformId);
+  void setGrainSource();
+  
+  /** Set the grain envelope parameters */
+  void setGrainEnvelope(GrainEnvelope::Shape shape, 
+                       float attackMs, float decayMs, 
+                       float sustainLevel, float releaseMs);
+  
+  /** Set grain pitch parameters */
+  void setGrainPitch(float basePitch, float pitchVariation, bool quantize = false);
+  
+  /** Set grain pan parameters */
+  void setGrainPan(float pan, float spread);
+  
+  /** Set grain duration parameters */
+  void setGrainDuration(float durationMs, float variation);
+  
+  /** Set grain density */
+  void setGrainDensity(float density);
+  
+  /** Set grain volume */
+  void setGrainVolume(float volume);
+  
+  /** Set sample playback parameters */
+  void setSamplePlaybackParams(float playbackRate, float startPos, float endPos, bool loop);
+  
+  /** Set global volume */
+  void setVolume(float volumeDb);
+  
+  /** Set pan position */
+  void setPan(float pan);
+  
+  /** Set stereo width */
+  void setWidth(float width);
+  
+  /** Set modulation depth */
+  void setModulationDepth(int source, int target, float depth);
+  
+  /** Set parameter by ID - for automation */
+  void setParameter(int parameterId, float value);
 
   /** Provides a non-owning pointer to the model for the UI to control. */
   StochasticModel* getStochasticModel() { return &stochasticModel; }
 
   /** Applies MIDI note and velocity influence to the stochastic model. */
   void applyMidiInfluence(int noteNumber, float normalizedVelocity);
+  
+  /** Initializes the visualization component. */
+  void initializeVisualization();
 
 private:
   double currentSampleRate = 44100.0;
@@ -284,14 +424,32 @@ private:
   // Placeholder for the loaded audio file data.
   juce::AudioBuffer<float> sourceAudio;
 
-  Pointilsynth::Oscillator oscillator_;
   GrainEnvelope grainEnvelope_;
   std::atomic<GrainSourceType> currentSourceType_{GrainSourceType::Oscillator};
-
-  juce::AbstractFifo* visualizationFifo_{};
-  GrainInfoForVis* visualizationBuffer_{};
+  
+  // Visualization FIFO connection
+  juce::AbstractFifo* visualizationFifo_ = nullptr;
+  GrainInfoForVis* visualizationBuffer_ = nullptr;
 
   InertialHistoryManager inertialHistoryManager_;
+
+  // Audio parameters
+  std::atomic<float> volume_ {0.7f};  // 0.0 to 1.0
+  std::atomic<float> pan_ {0.0f};     // -1.0 (left) to 1.0 (right)
+  std::atomic<float> samplePlaybackRate_ {1.0f};  // Playback rate multiplier
+
+  // Timing variables for visualization
+  double currentPpq {0.0};
+  double ppqPerBar {0.0};
+  
+  // Sample playback state
+  float sampleStartPos_ {0.0f};  // Start position in the sample (0.0 to 1.0)
+  float sampleEndPos_ {1.0f};    // End position in the sample (0.0 to 1.0)
+  bool loopSample_ {false};      // Whether to loop the sample
+  float width_ {1.0f};           // Stereo width control (0.0 to 1.0)
+  
+  // Modulation matrix for LFOs and envelopes
+  std::array<std::array<float, 8>, 8> modulationMatrix_;
 
   void triggerNewGrain();
 };

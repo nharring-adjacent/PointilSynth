@@ -16,9 +16,7 @@ class PointillisticSynthAudioProcessorEditor
     : public juce::AudioProcessorEditor {
 public:
   PointillisticSynthAudioProcessorEditor(
-      audio_plugin::AudioPluginAudioProcessor&,
-      juce::AbstractFifo& fifo,
-      GrainInfoForVis* buffer);
+      audio_plugin::AudioPluginAudioProcessor&);
   ~PointillisticSynthAudioProcessorEditor() override;
 
   void paint(juce::Graphics&) override;

@@ -88,5 +88,16 @@ ConfigManager::createLayout() {
   params.push_back(std::make_unique<juce::AudioParameterChoice>(
       ParamID::temporalDistribution, "TemporalDistribution",
       juce::StringArray{"Uniform", "Poisson"}, 0));
+      
+  // Oscillator distribution parameters (0.0 to 1.0 range, default to equal distribution)
+  params.push_back(std::make_unique<juce::AudioParameterFloat>(
+      ParamID::oscDistSine, "Sine Distribution", 0.0f, 1.0f, 0.25f));
+  params.push_back(std::make_unique<juce::AudioParameterFloat>(
+      ParamID::oscDistSaw, "Saw Distribution", 0.0f, 1.0f, 0.25f));
+  params.push_back(std::make_unique<juce::AudioParameterFloat>(
+      ParamID::oscDistSquare, "Square Distribution", 0.0f, 1.0f, 0.25f));
+  params.push_back(std::make_unique<juce::AudioParameterFloat>(
+      ParamID::oscDistNoise, "Noise Distribution", 0.0f, 1.0f, 0.25f));
+      
   return {params.begin(), params.end()};
 }

@@ -16,9 +16,9 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 #endif
               ),
       configManager(ConfigManager::getInstance(this)),
-      audioEngine(configManager,
-                  &visualizationFifo,
-                  visualizationBuffer.data()) {
+      audioEngine(configManager) {
+  // Connect AudioEngine to visualization FIFO
+  audioEngine.setVisualizationFifo(&visualizationFifo, visualizationBuffer.data());
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {
@@ -204,8 +204,7 @@ bool AudioPluginAudioProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor() {
-  return new PointillisticSynthAudioProcessorEditor(*this, visualizationFifo,
-                                                    visualizationBuffer.data());
+  return new PointillisticSynthAudioProcessorEditor(*this);
 }
 
 void AudioPluginAudioProcessor::getStateInformation(
