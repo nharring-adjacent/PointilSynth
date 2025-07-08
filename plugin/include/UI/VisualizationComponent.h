@@ -1,7 +1,6 @@
 #pragma once
 
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <juce_opengl/juce_opengl.h>
 #include <juce_graphics/juce_graphics.h>
 #include <vector>
 #include <atomic>
@@ -14,8 +13,7 @@ class InertialHistoryManager;
 namespace audio_plugin {
 
 class VisualizationComponent : public juce::Component,
-                              public juce::Timer,
-                              private juce::OpenGLRenderer {
+                              public juce::Timer {
 public:
     explicit VisualizationComponent(juce::AudioProcessorValueTreeState& apvts);
     ~VisualizationComponent() override;
@@ -24,10 +22,8 @@ public:
     void resized() override;
     void timerCallback() override;
 
-    // OpenGLRenderer callbacks
-    void newOpenGLContextCreated() override;
-    void renderOpenGL() override;
-    void openGLContextClosing() override;
+    // Animation and rendering
+    void updateAnimation();
 
     // Visual presets
     enum class VisualPreset {
@@ -66,12 +62,8 @@ public:
     void setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer);
 
 private:
-    #if ! defined (JUCE_HEADLESS_TESTING)
-    juce::OpenGLContext openGLContext;
-    #endif
-    
-    // OpenGL availability flag
-    bool openGLAvailable;
+    // Animation state
+    double animationTime{0.0};
     
     // APVTS reference
     juce::AudioProcessorValueTreeState& apvts_;
@@ -100,22 +92,14 @@ private:
         float velocity{1.0f};   // 0.0 to 1.0
     };
 
-    // OpenGL resources
-    void initializeGL();
-    void initializeShaders();
-    void updateParticleBuffers();
-    void renderParticles();
+    // Graphics resources
     void updateParticles();
+    void drawParticles(juce::Graphics& g);
     
     
-    // OpenGL objects
-    std::unique_ptr<juce::OpenGLShaderProgram> shaderProgram;
-    GLuint particleVBO = 0;
-    GLuint particleVAO = 0;
-    
-    // Shader source code
-    static const char* vertexShaderSource;
-    static const char* fragmentShaderSource;
+    // Graphics state
+    juce::Image particleBuffer;
+    bool bufferNeedsUpdate{true};
     
     // Thread safety
     juce::CriticalSection particleLock;
@@ -175,8 +159,8 @@ private:
     void drawNoteConnections(const InertialNote& note);
     void drawParticleTrail(const VisualGrain& grain);
     
-    // Shader program uniform
-    std::unique_ptr<juce::OpenGLShaderProgram::Uniform> projectionMatrixUniform;
+    // Performance optimization
+    juce::int64 lastBufferUpdate{0};
     
         // Color management
     juce::ColourGradient colorGradient;

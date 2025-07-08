@@ -53,12 +53,12 @@ public:
 
 struct VisualizationComponentTestFixture {
     VisualizationComponentTestFixture() : apvts(mockProcessor, nullptr, "TestAPVTS", {}) {
-        // Initialize OpenGL for testing
-        openGLContext.attachTo(*component);
+        // Initialize component for testing
+        component->setSize(800, 600);
     }
     
     ~VisualizationComponentTestFixture() {
-        openGLContext.detach();
+        // Cleanup
     }
     
     ScopedJuceInitialiser_GUI libraryInitialiser;
@@ -69,7 +69,6 @@ struct VisualizationComponentTestFixture {
     TestInertialHistoryManager historyManager;
     juce::AudioDeviceManager deviceManager;
     std::unique_ptr<VisualizationComponent> component{std::make_unique<VisualizationComponent>(apvts)};
-    juce::OpenGLContext openGLContext;
     juce::CriticalSection lock;
     
     void simulateGrain(int note, float pan, float pitch, float age = 0.0f) {

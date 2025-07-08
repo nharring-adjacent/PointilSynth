@@ -1,32 +1,4 @@
 #include "UI/VisualizationComponent.h"
-
-// Include JUCE OpenGL first to avoid macro redefinition issues
-#include <juce_opengl/juce_opengl.h>
-
-// JUCE OpenGL includes all necessary OpenGL headers
-// No need for GLEW or GLFW as JUCE provides the necessary OpenGL context
-
-// Include standard OpenGL headers after JUCE
-#if JUCE_OPENGL_ES
-    #include <GLES3/gl3.h>
-#elif JUCE_MAC
-    #include <OpenGL/gl.h>
-    #include <OpenGL/glu.h>
-#else
-    #include <GL/gl.h>
-    #include <GL/glu.h>
-#endif
-
-namespace {
-    // Vertex shader source
-
-
-
-    // Fragment shader source
-
-
-}
-
 #include <cmath>
 #include <algorithm>
 #include "Pointilsynth/InertialHistoryManager.h"
@@ -46,6 +18,7 @@ juce::Colour getColorForPitch(float pitch, float velocity) {
     float brightness = juce::jmap(velocity, 0.0f, 1.0f, 0.5f, 1.0f);
     return juce::Colour::fromHSV(hue, saturation, brightness, 0.8f);
 }
+
 // Preset configurations
 namespace {
     const juce::ColourGradient createDefaultGradient() {
@@ -148,7 +121,7 @@ void VisualizationComponent::triggerVisualFeedback(int note, float velocity) {
 
 void VisualizationComponent::updateVisualFeedbacks() {
     auto now = juce::Time::getMillisecondCounterHiRes() / 1000.0;
-(void)now; // suppress unused variable warning
+    (void)now; // suppress unused variable warning
     
     for (auto it = activeFeedbacks_.begin(); it != activeFeedbacks_.end(); ) {
         it->radius += 0.1f;
@@ -175,124 +148,27 @@ void VisualizationComponent::drawVisualFeedbacks(juce::Graphics& g) {
     }
 }
 
-// Initialize static shader source strings
-const char* VisualizationComponent::vertexShaderSource = R"(
-    #version 330 core
-    layout (location = 0) in vec2 position;
-    layout (location = 1) in vec4 color;
-    layout (location = 2) in float size;
-    out vec4 fragColor;
-    void main() {
-        gl_Position = vec4(position.x * 2.0 - 1.0, 1.0 - position.y * 2.0, 0.0, 1.0);
-        gl_PointSize = size;
-        fragColor = color;
-    }
-)";
-
-const char* VisualizationComponent::fragmentShaderSource = R"(
-    #version 330 core
-    in vec4 fragColor;
-    out vec4 outColor;
-    void main() {
-        outColor = fragColor;
-        // Make particles round
-        vec2 coord = gl_PointCoord - vec2(0.5);
-        if (length(coord) > 0.5) {
-            discard;
-        }
-    }
-)";
-
 VisualizationComponent::VisualizationComponent(juce::AudioProcessorValueTreeState& apvts)
     : juce::Component("VisualizationComponent"),
       juce::Timer(),
-#if ! defined (JUCE_HEADLESS_TESTING)
-      openGLContext(),
-#endif
-      openGLAvailable(false),
+      animationTime(0.0),
       apvts_(apvts),
-      shaderProgram(),
-      particleVBO(0),
-      particleVAO(0),
       particleLock(),
       grains(),
       lastUpdateTime(juce::Time::getMillisecondCounterHiRes() / 1000.0) {
     setOpaque(true);
     setSize(800, 600);
     
-#if ! defined (JUCE_HEADLESS_TESTING)
-    // Try to initialize OpenGL with error handling
-    try {
-        juce::OpenGLPixelFormat format;
-        format.depthBufferBits = 24;
-        format.stencilBufferBits = 8;
-        format.multisamplingLevel = 4;
-        
-        openGLContext.setOpenGLVersionRequired(juce::OpenGLContext::openGL3_2);
-        openGLContext.setPixelFormat(format);
-        openGLContext.setRenderer(this);
-        
-        // Try to attach OpenGL context
-        openGLContext.attachTo(*this);
-        
-        // Check if OpenGL context is properly attached
-        if (openGLContext.isAttached()) {
-            openGLContext.setContinuousRepainting(true);
-            openGLAvailable = true;
-            startTimerHz(60); // 60 FPS for visual updates
-        } else {
-            DBG("VisualizationComponent: Failed to attach OpenGL context, falling back to software rendering");
-            openGLAvailable = false;
-        }
-    } catch (...) {
-        DBG("VisualizationComponent: Exception during OpenGL initialization, falling back to software rendering");
-        openGLAvailable = false;
-    }
-#else
-    // In headless testing, always disable OpenGL
-    openGLAvailable = false;
-#endif
+    // Initialize graphics buffer
+    particleBuffer = juce::Image(juce::Image::ARGB, 800, 600, true);
+    
+    // Start timer for smooth 60 FPS animation
+    startTimerHz(60);
 }
 
 VisualizationComponent::~VisualizationComponent() {
     stopTimer();
-    
-#if ! defined (JUCE_HEADLESS_TESTING)
-    // Release OpenGL resources if available
-    if (openGLAvailable && openGLContext.isAttached()) {
-        openGLContext.detach();
-    }
-#endif
 }
-
-#if ! defined (JUCE_HEADLESS_TESTING)
-void VisualizationComponent::renderOpenGL() {
-    jassert(juce::OpenGLHelpers::isContextActive());
-    
-    // Set up the viewport
-    // Set up the viewport
-    const float renderingScale = static_cast<float>(openGLContext.getRenderingScale());
-    const auto width = static_cast<int>(renderingScale * static_cast<float>(getWidth()));
-    const auto height = static_cast<int>(renderingScale * static_cast<float>(getHeight()));
-    // Use getPrimaryDisplay instead of deprecated getMainDisplay, and use width/height directly
-    auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
-    juce::Rectangle<int> screen(display->userArea.getX(), display->userArea.getY(), display->userArea.getWidth(), display->userArea.getHeight());
-    juce::OpenGLHelpers::clear(juce::Colours::black);
-    juce::gl::glViewport(0, 0, width, height);
-    
-    // Clear the background
-    juce::OpenGLHelpers::clear(juce::Colours::black);
-    
-    // Update and render particles
-    updateParticles();
-    renderParticles();
-    
-    // Reset the element buffers so child Components draw correctly
-    openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, 0);
-    openGLContext.extensions.glBindBuffer(juce::gl::GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-#endif
-
 
 void VisualizationComponent::updateParticles() {
     const double now = currentTimeSeconds();
@@ -329,8 +205,7 @@ void VisualizationComponent::updateParticles() {
                               }),
                grains.end());
     
-    // Add new grains from audio thread
-    // addNewGrains(); // TODO: Implement this method
+    bufferNeedsUpdate = true;
 }
 
 void VisualizationComponent::setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer) {
@@ -359,55 +234,51 @@ void VisualizationComponent::addGrainInfo(const GrainInfoForVis& info) {
     grains.push_back(grain);
 }
 
-
-
-void VisualizationComponent::renderParticles() {
-    if (!shaderProgram) {
-        initializeShaders();
-        if (!shaderProgram) {
-            return; // Shader initialization failed
-        }
-    }
+void VisualizationComponent::drawParticles(juce::Graphics& g) {
+    const juce::CriticalSection::ScopedLockType lock(particleLock);
     
-    // Update particle data
-    updateParticleBuffers();
-    
-    // Draw particles
-    {
-        const juce::CriticalSection::ScopedLockType lock(particleLock);
+    for (const auto& grain : grains) {
+        // Convert normalized coordinates to screen coordinates
+        float x = juce::jmap(grain.x, 0.0f, 1.0f, 0.0f, static_cast<float>(getWidth()));
+        float y = juce::jmap(grain.y, 0.0f, 1.0f, 0.0f, static_cast<float>(getHeight()));
         
-        if (particleVBO != 0 && !grains.empty()) {
-            // Use shader program
-            shaderProgram->use();
+        // Set color and alpha
+        g.setColour(grain.colour.withAlpha(grain.currentAlpha));
+        
+        // Draw particle as a circle
+        float radius = grain.currentSize * 0.5f;
+        g.fillEllipse(x - radius, y - radius, grain.currentSize, grain.currentSize);
+        
+        // Draw trails if enabled
+        if (trailLength_ > 0 && !grain.trailPositions.empty()) {
+            juce::Path trailPath;
+            bool firstPoint = true;
             
-            // Bind VAO
-            openGLContext.extensions.glBindVertexArray(particleVAO);
+            for (size_t i = 0; i < grain.trailPositions.size(); ++i) {
+                float trailX = juce::jmap(grain.trailPositions[i].first, 0.0f, 1.0f, 0.0f, static_cast<float>(getWidth()));
+                float trailY = juce::jmap(grain.trailPositions[i].second, 0.0f, 1.0f, 0.0f, static_cast<float>(getHeight()));
+                
+                if (firstPoint) {
+                    trailPath.startNewSubPath(trailX, trailY);
+                    firstPoint = false;
+                } else {
+                    trailPath.lineTo(trailX, trailY);
+                }
+            }
             
-            // Enable point sprites and point size control in shaders
-            juce::gl::glEnable(juce::gl::GL_PROGRAM_POINT_SIZE);
-            
-            // Enable blending
-            juce::gl::glEnable(juce::gl::GL_BLEND);
-            juce::gl::glBlendFunc(juce::gl::GL_SRC_ALPHA, juce::gl::GL_ONE_MINUS_SRC_ALPHA);
-            
-            // Draw points
-            juce::gl::glDrawArrays(juce::gl::GL_POINTS, 0, static_cast<GLsizei>(grains.size()));
-            
-            // Clean up
-            juce::gl::glDisable(juce::gl::GL_BLEND);
-            juce::gl::glBindVertexArray(0);
+            float trailAlpha = grain.currentAlpha * 0.3f;
+            g.setColour(grain.colour.withAlpha(trailAlpha));
+            g.strokePath(trailPath, juce::PathStrokeType(1.0f));
         }
     }
 }
 
 void VisualizationComponent::resized() {
-#if ! defined (JUCE_HEADLESS_TESTING)
-    // Update OpenGL viewport when component is resized
-    if (openGLAvailable && openGLContext.isAttached()) {
-        // No need to call updateEmbeddedPosition; OpenGL viewport will be updated automatically in renderOpenGL
+    // Recreate buffer with new size
+    if (getWidth() > 0 && getHeight() > 0) {
+        particleBuffer = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
+        bufferNeedsUpdate = true;
     }
-#endif
-    // In software mode, no special handling needed - repaint will handle new size
 }
 
 void VisualizationComponent::timerCallback() {
@@ -427,94 +298,29 @@ void VisualizationComponent::timerCallback() {
     }
     
     if (isVisible()) {
-        if (openGLAvailable) {
-#if ! defined (JUCE_HEADLESS_TESTING)
-            // Update particles and request OpenGL repaint
-            updateParticles();
-            openGLContext.triggerRepaint();
-#endif
-        } else {
-            // In software mode, update particles and request normal repaint
-            updateParticles();
-            repaint();
-        }
+        updateParticles();
+        updateVisualFeedbacks();
+        updateMeterPeaks();
+        repaint();
     }
 }
 
-void VisualizationComponent::paint(juce::Graphics& g)
-{
-    // When OpenGL is not available, provide software rendering fallback
-    if (!openGLAvailable) {
-        // Fill background
-        g.fillAll(juce::Colour(0xff1a1a1a));
-        
-        // Draw particles using software rendering
-        const juce::CriticalSection::ScopedLockType lock(particleLock);
-        for (const auto& grain : grains) {
-            // Convert normalized coordinates to screen coordinates
-            float x = juce::jmap(grain.x, -1.0f, 1.0f, 0.0f, static_cast<float>(getWidth()));
-            float y = juce::jmap(grain.y, 0.0f, 1.0f, static_cast<float>(getHeight()), 0.0f);
-            
-            // Set color and alpha
-            g.setColour(grain.colour.withAlpha(grain.currentAlpha));
-            
-            // Draw particle as a circle
-            float radius = grain.currentSize * 0.5f;
-            g.fillEllipse(x - radius, y - radius, grain.currentSize, grain.currentSize);
-        }
-        
-        // Draw a simple message indicating software mode
-        g.setColour(juce::Colours::white.withAlpha(0.3f));
-        g.setFont(12.0f);
-        g.drawText("Software Rendering", getLocalBounds().removeFromBottom(20), 
-                   juce::Justification::centredRight, true);
-    }
+void VisualizationComponent::paint(juce::Graphics& g) {
+    // Fill background
+    g.fillAll(juce::Colour(0xff1a1a1a));
     
-    // Always draw JUCE-based overlays (meters, feedback, etc.)
+    // Draw particles
+    drawParticles(g);
+    
+    // Draw overlays (meters, feedback, etc.)
     drawVisualFeedbacks(g);
     drawMeters(g);
 }
 
-#if ! defined (JUCE_HEADLESS_TESTING)
-void VisualizationComponent::newOpenGLContextCreated()
-{
-    if (!openGLAvailable) return;
-    
-    // Initialize OpenGL resources (shaders, buffers, etc.)
-    initializeShaders();
-    // Create VBO/VAO if not already created
-    if (particleVBO == 0)
-    {
-        openGLContext.extensions.glGenBuffers(1, &particleVBO);
-    }
-    if (particleVAO == 0)
-    {
-        openGLContext.extensions.glGenVertexArrays(1, &particleVAO);
-    }
+void VisualizationComponent::updateAnimation() {
+    animationTime += 1.0 / 60.0; // Assuming 60 FPS
+    repaint();
 }
-
-void VisualizationComponent::openGLContextClosing()
-{
-#if ! defined (JUCE_HEADLESS_TESTING)
-    if (!openGLAvailable) return;
-    
-    // Clean up OpenGL resources
-    if (particleVBO != 0) {
-        openGLContext.extensions.glDeleteBuffers(1, &particleVBO);
-        particleVBO = 0;
-    }
-    if (particleVAO != 0) {
-        openGLContext.extensions.glDeleteVertexArrays(1, &particleVAO);
-        particleVAO = 0;
-    }
-    shaderProgram.reset();
-#endif
-}
-#else
-// Headless implementations - do nothing
-void VisualizationComponent::newOpenGLContextCreated() {}
-void VisualizationComponent::renderOpenGL() {}
-#endif
 
 void VisualizationComponent::drawMeters(juce::Graphics& g) {
     if (!showMeters_) return;
@@ -554,52 +360,8 @@ void VisualizationComponent::setParticleSize(float minSize, float maxSize) {
     maxParticleSize_ = maxSize;
 }
 
-void VisualizationComponent::initializeShaders() {
-    shaderProgram = std::make_unique<juce::OpenGLShaderProgram>(openGLContext);
-    if (!shaderProgram->addVertexShader(vertexShaderSource) || !shaderProgram->addFragmentShader(fragmentShaderSource) || !shaderProgram->link()) {
-        shaderProgram.reset();
-    }
-}
-
 void VisualizationComponent::setParticleOpacity(float opacity) {
     particleOpacity_ = opacity;
 }
 
-void VisualizationComponent::updateParticleBuffers() {
-    if (grains.empty()) return;
-
-    const juce::CriticalSection::ScopedLockType lock(particleLock);
-    
-    std::vector<float> vertexData;
-    vertexData.reserve(grains.size() * 7);
-
-    for (const auto& grain : grains) {
-        vertexData.push_back(grain.x);
-        vertexData.push_back(grain.y);
-        vertexData.push_back(grain.colour.getFloatRed());
-        vertexData.push_back(grain.colour.getFloatGreen());
-        vertexData.push_back(grain.colour.getFloatBlue());
-        vertexData.push_back(grain.colour.getFloatAlpha() * grain.currentAlpha);
-        vertexData.push_back(grain.currentSize);
-    }
-
-    openGLContext.extensions.glBindVertexArray(particleVAO);
-    openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, particleVBO);
-    openGLContext.extensions.glBufferData(juce::gl::GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertexData.size() * sizeof(float)), vertexData.data(), juce::gl::GL_DYNAMIC_DRAW);
-
-    // Position
-    openGLContext.extensions.glVertexAttribPointer(0, 2, juce::gl::GL_FLOAT, juce::gl::GL_FALSE, 7 * sizeof(float), nullptr);
-    openGLContext.extensions.glEnableVertexAttribArray(0);
-    // Color
-    openGLContext.extensions.glVertexAttribPointer(1, 4, juce::gl::GL_FLOAT, juce::gl::GL_FALSE, 7 * sizeof(float), reinterpret_cast<void*>(2 * sizeof(float)));
-    openGLContext.extensions.glEnableVertexAttribArray(1);
-    // Size
-    openGLContext.extensions.glVertexAttribPointer(2, 1, juce::gl::GL_FLOAT, juce::gl::GL_FALSE, 7 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-    openGLContext.extensions.glEnableVertexAttribArray(2);
-
-    openGLContext.extensions.glBindBuffer(juce::gl::GL_ARRAY_BUFFER, 0);
-    openGLContext.extensions.glBindVertexArray(0);
-}
-
 }  // namespace audio_plugin
-
