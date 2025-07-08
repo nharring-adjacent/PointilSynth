@@ -337,6 +337,9 @@ public:
   enum class GrainSourceType { Oscillator, AudioSample };
 
   explicit AudioEngine(std::shared_ptr<ConfigManager> cfg = {});
+  
+  /** Set up visualization FIFO for grain data */
+  void setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer);
 
   /** Called by the host to prepare the engine for playback. */
   void prepareToPlay(double sampleRate, int samplesPerBlock);
@@ -423,6 +426,10 @@ private:
 
   GrainEnvelope grainEnvelope_;
   std::atomic<GrainSourceType> currentSourceType_{GrainSourceType::Oscillator};
+  
+  // Visualization FIFO connection
+  juce::AbstractFifo* visualizationFifo_ = nullptr;
+  GrainInfoForVis* visualizationBuffer_ = nullptr;
 
   InertialHistoryManager inertialHistoryManager_;
 

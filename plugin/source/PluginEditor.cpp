@@ -14,6 +14,8 @@ PointillisticSynthAudioProcessorEditor::PointillisticSynthAudioProcessorEditor(
       durationPod(ConfigManager::ParamID::avgDuration, "Duration"),
       panPod(ConfigManager::ParamID::pan, "Pan"),
       visualizationComponent(p.getConfigManager()->getAPVTS()) {
+  // Connect visualization component to the processor's FIFO
+  visualizationComponent.setVisualizationFifo(&p.getVisualizationFifo(), p.getVisualizationBuffer());
   addAndMakeVisible(visualizationComponent);
   addAndMakeVisible(debugButton);
   addAndMakeVisible(pitchPod);

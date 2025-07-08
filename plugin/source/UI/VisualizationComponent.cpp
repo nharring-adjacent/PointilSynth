@@ -333,6 +333,11 @@ void VisualizationComponent::updateParticles() {
     // addNewGrains(); // TODO: Implement this method
 }
 
+void VisualizationComponent::setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer) {
+    visualizationFifo_ = fifo;
+    visualizationBuffer_ = buffer;
+}
+
 void VisualizationComponent::addGrainInfo(const GrainInfoForVis& info) {
     const double now = currentTimeSeconds();
 
@@ -406,6 +411,21 @@ void VisualizationComponent::resized() {
 }
 
 void VisualizationComponent::timerCallback() {
+    // Read new grain info from FIFO
+    if (visualizationFifo_ && visualizationBuffer_) {
+        int start1, size1, start2, size2;
+        visualizationFifo_->prepareToRead(visualizationFifo_->getNumReady(), start1, size1, start2, size2);
+        
+        for (int i = 0; i < size1; ++i) {
+            addGrainInfo(visualizationBuffer_[start1 + i]);
+        }
+        for (int i = 0; i < size2; ++i) {
+            addGrainInfo(visualizationBuffer_[start2 + i]);
+        }
+        
+        visualizationFifo_->finishedRead(size1 + size2);
+    }
+    
     if (isVisible()) {
         if (openGLAvailable) {
 #if ! defined (JUCE_HEADLESS_TESTING)

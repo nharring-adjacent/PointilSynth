@@ -61,6 +61,9 @@ public:
 
     // Add grain info for visualization
     void addGrainInfo(const GrainInfoForVis& info);
+    
+    // Connect to visualization FIFO
+    void setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer);
 
 private:
     #if ! defined (JUCE_HEADLESS_TESTING)
@@ -184,6 +187,10 @@ private:
     float particleOpacity_ = 0.8f;
     float gravity_ = 98.1f;
     int trailLength_ = 0;
+    
+    // Visualization FIFO connection
+    juce::AbstractFifo* visualizationFifo_ = nullptr;
+    GrainInfoForVis* visualizationBuffer_ = nullptr;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(VisualizationComponent)
 };

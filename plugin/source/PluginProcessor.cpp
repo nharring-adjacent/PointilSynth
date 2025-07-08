@@ -17,6 +17,8 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
               ),
       configManager(ConfigManager::getInstance(this)),
       audioEngine(configManager) {
+  // Connect AudioEngine to visualization FIFO
+  audioEngine.setVisualizationFifo(&visualizationFifo, visualizationBuffer.data());
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor() {

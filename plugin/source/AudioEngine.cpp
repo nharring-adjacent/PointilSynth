@@ -16,6 +16,11 @@ AudioEngine::AudioEngine(std::shared_ptr<ConfigManager> cfg)
     // Initialize without visualization component for now
 }
 
+void AudioEngine::setVisualizationFifo(juce::AbstractFifo* fifo, GrainInfoForVis* buffer) {
+    visualizationFifo_ = fifo;
+    visualizationBuffer_ = buffer;
+}
+
 void AudioEngine::initializeVisualization() {
     // Visualization initialization placeholder
     // TODO: Add visualization component support back later
@@ -53,7 +58,26 @@ void AudioEngine::triggerNewGrain() {
 
   grains.push_back(std::move(newGrain));
 
-  // TODO: Add visualization grain info when visualization component is available
+  // Send grain info to visualization if available
+  if (visualizationFifo_ && visualizationBuffer_) {
+    GrainInfoForVis visInfo;
+    visInfo.pitch = newGrain.pitch;
+    visInfo.pan = newGrain.pan;
+    visInfo.velocity = newGrain.amplitude;
+    visInfo.durationSeconds = static_cast<float>(newGrain.durationInSamples) / static_cast<float>(currentSampleRate);
+    visInfo.sourceType = static_cast<int>(currentSourceType_.load());
+    visInfo.sourceWaveform = 0; // Default to sine for now
+    
+    int start1, size1, start2, size2;
+    visualizationFifo_->prepareToWrite(1, start1, size1, start2, size2);
+    if (size1 > 0) {
+      visualizationBuffer_[start1] = visInfo;
+    }
+    if (size2 > 0) {
+      visualizationBuffer_[start2] = visInfo;
+    }
+    visualizationFifo_->finishedWrite(size1 + size2);
+  }
 }
 
 void AudioEngine::processBlock(juce::AudioBuffer<float>& buffer,

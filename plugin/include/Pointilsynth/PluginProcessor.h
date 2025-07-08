@@ -15,6 +15,10 @@ public:
     return audioEngine.getStochasticModel();
   }
   std::shared_ptr<ConfigManager> getConfigManager() { return configManager; }
+  
+  // Visualization FIFO access
+  juce::AbstractFifo& getVisualizationFifo() { return visualizationFifo; }
+  GrainInfoForVis* getVisualizationBuffer() { return visualizationBuffer.data(); }
   ~AudioPluginAudioProcessor() override;
 
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
